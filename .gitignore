@@ -1,3 +1,6 @@
+# Ignore mine
+out
+
 # Prerequisites
 *.d
 

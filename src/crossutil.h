@@ -1,0 +1,1 @@
+void draw_crossword(char** crossword, int crossword_size);

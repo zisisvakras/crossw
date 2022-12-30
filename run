@@ -1,0 +1,7 @@
+#!/bin/bash
+
+make crossw > /dev/null
+
+./crossw data/Crossword1.txt -dict data/Words.txt
+
+make clean > /dev/null
