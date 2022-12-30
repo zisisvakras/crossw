@@ -7,6 +7,7 @@
 
 extern int errno;
 
+//TODO make dictionary also go backwards
 int main(int argc, char** argv) {
 
     //TODO better checking for invalid arguments
@@ -91,6 +92,9 @@ int main(int argc, char** argv) {
     //print_dict(dictionary, max_word_size);
     //draw_crossword(crossword, crossword_size);
 
+    // for (int i = 0 ; i < 1000000 ; i++) {
+    //     find_word(dictionary, "zygote"); // last 6 letter word
+    // }
     /* Closing files and deallocating memory */
     fclose(crossword_file);
     free_dict(dictionary, max_word_size);
