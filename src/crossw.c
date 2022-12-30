@@ -88,9 +88,9 @@ int main(int argc, char** argv) {
     if (dictionary == NULL) { /* Check dict.c for errors */
         return errno;
     }
-    print_dict(dictionary, max_word_size);
-    draw_crossword(crossword, crossword_size);
-    
+    //print_dict(dictionary, max_word_size);
+    //draw_crossword(crossword, crossword_size);
+
     /* Closing files and deallocating memory */
     fclose(crossword_file);
     free_dict(dictionary, max_word_size);
