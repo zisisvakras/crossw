@@ -81,13 +81,11 @@ void print_dict(Dictnode* dictionary, int max_word_size) {
 
 void free_dict(Dictnode* dictionary, int max_word_size) {
     for (int i = 0 ; i < max_word_size ; i++) {
-        Dictnode prev = dictionary[i];
-        Dictnode new;
-        while ((new = prev->next) != NULL) {
-            free(prev);
-            prev = new;
+        Dictnode temp;
+        while (dictionary[i] != NULL) {
+            temp = dictionary[i];
+            dictionary[i] = dictionary[i]->next;
+            free(temp);
         }
-        free(prev);
-        free(new);
     }
 }
