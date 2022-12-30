@@ -93,8 +93,8 @@ void free_dict(Dictnode* dictionary, int max_word_size) {
 char* find_word(Dictnode* dictionary, char* filter) {
     int i, word_size = strlen(filter);
     Dictnode node = dictionary[word_size - 1];
-    while (node->word != NULL) {
-        char* word = node->word;
+    char* word;
+    while ((word = node->word) != NULL) {
         for (i = 0 ; i < word_size ; i++) {
             if (filter[i] == '?') continue;
             if (word[i] != filter[i]) break;
