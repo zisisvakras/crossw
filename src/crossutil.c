@@ -14,44 +14,37 @@ void draw_crossword(char** crossword, int crossword_size) {
     }
 }
 
-void check(char** crossword,int crossward_size,Wordnode* words_pos,int hor_count,Dictnode* dictionary){
+int check(char** crossword, int crossward_size, Wordnode* words, int hor_count, Dictnode* dictionary){
     char* buffer = malloc(sizeof(char) * 81);
     int count = 0;
     while (fscanf(stdin, "%80s", buffer) == 1){
         int word_size = strlen(buffer);
-
-        if(words_pos[0][count].end - (words_pos[0][count].begin - 1) != word_size){
-            fprintf(stderr,"Word: %s ,could not be placed");
-            return;
+        if(words[0][count].end - words[0][count].begin + 1 != word_size){
+            fprintf(stderr, "Word: %s, could not be placed\n", buffer);
+            return 1;
         } 
-
-        int flag = 0;
+        int found = 0;
         Dictnode node = dictionary[word_size - 1];
-        while ((buffer = node->word) != NULL) {
-            if(strcmp(buffer,node->word)){
-                flag = 1;
+        while (node->word != NULL) {
+            if(!strcmp(buffer, node->word)){
+                found = 1;
                 break;
             }
             node = node->next;
         }
-
-        if(flag==0){
-            fprintf(stderr,"Word: %s ,not found in dictionary",buffer);
-            return;
+        if(found == 0) {
+            fprintf(stderr, "Word: %s, not found in dictionary", buffer);
+            return 1;
         }
-
-        //word is in dictionary and now it will be placed
-        write_word(crossword,words_pos[0][count],0,buffer);
+        write_word(crossword, words[0][count], 0, buffer);
         count++;
-
-        //TODO add check if the vertical words created are valid
-        //kati legame gia binary tree gia na kanoume grhgora ta checks, to afhnw pros to paron
     }
 
     if(count != hor_count){
-        fprintf(stderr,"Invalid count of words");
-        return;
+        fprintf(stderr, "Needed more words");
+        return 1;
     }
+    return 0;
 }
 
 //TODO fix variable names
