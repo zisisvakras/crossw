@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "dict.h"
+#include "library.h"
 
 extern int errno;
 
-Dictnode* make_dict(char* dictionary_path, int max_word_size) {   
+Dictnode* make_dict(char* dictionary_path, int max_word_size) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
 
@@ -90,7 +90,7 @@ void free_dict(Dictnode* dictionary, int max_word_size) {
     }
 }
 
-char* find_word(Dictnode* dictionary, char* filter) {
+Word_finder find_word(Dictnode* dictionary, char* filter) {
     int i, word_size = strlen(filter);
     Dictnode node = dictionary[word_size - 1];
     char* word;
@@ -99,7 +99,12 @@ char* find_word(Dictnode* dictionary, char* filter) {
             if (filter[i] == '?') continue;
             if (word[i] != filter[i]) break;
         }
-        if (i == word_size) return word;
+        if (i == word_size) {
+            Word_finder ret = malloc(sizeof(struct Word_finderstruct));
+            ret->word = word;
+            ret->next = node->next;
+            return ret;
+        }
         node = node->next;
     }
     return NULL;

@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "dict.h"
-#include "crossutil.h"
+#include "library.h"
 
 extern int errno;
 
-//TODO make dictionary also go backwards
+
+//TODO better alphabet for sorted double linked list by total (freq) value of letters
+//TODO make dictionary also go backwards maybe
 int main(int argc, char** argv) {
 
     //TODO better checking for invalid arguments
@@ -90,12 +91,19 @@ int main(int argc, char** argv) {
         return errno;
     }
     //print_dict(dictionary, max_word_size);
-    //draw_crossword(crossword, crossword_size);
 
     // for (int i = 0 ; i < 1000000 ; i++) {
     //     find_word(dictionary, "zygote"); // last 6 letter word
     // }
     /* Closing files and deallocating memory */
+    struct Map_ret* ret = map_crossword(crossword, crossword_size);
+    Wordnode* words = ret->words;
+    int hor_count = ret->hor_count;
+    int ver_count = ret->ver_count;
+    free(ret);
+
+    solve_crossword(crossword, crossword_size, dictionary, words, hor_count, ver_count);
+    
     fclose(crossword_file);
     free_dict(dictionary, max_word_size);
     printf("dict: %s cross: %s max: %d\n", dictionary_path, crossword_path, max_word_size);
