@@ -27,8 +27,8 @@ void check(char** crossword,int crossward_size,Wordnode* words_pos,int hor_count
 
         int flag = 0;
         Dictnode node = dictionary[word_size - 1];
-        while ((buffer = node->word) != NULL) {
-            if(strcmp(buffer,node->word)){
+        while (node->word != NULL) {
+            if(strcmp(buffer,node->word) == 0){
                 flag = 1;
                 break;
             }
