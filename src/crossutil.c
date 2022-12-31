@@ -14,12 +14,12 @@ void draw_crossword(char** crossword, int crossword_size) {
     }
 }
 
-int check(char** crossword, int crossward_size, Wordnode* words, int hor_count, Dictnode* dictionary){
+int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, Dictnode* dictionary) {
     char* buffer = malloc(sizeof(char) * 81);
     int count = 0;
-    while (fscanf(stdin, "%80s", buffer) == 1){
+    while (fscanf(stdin, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
-        if(words[0][count].end - words[0][count].begin + 1 != word_size){
+        if (words[0][count].end - words[0][count].begin + 1 != word_size) {
             fprintf(stderr, "Word: %s, could not be placed\n", buffer);
             free(buffer);
             return 1;
@@ -27,13 +27,13 @@ int check(char** crossword, int crossward_size, Wordnode* words, int hor_count, 
         int found = 0;
         Dictnode node = dictionary[word_size - 1];
         while (node->word != NULL) {
-            if(!strcmp(buffer, node->word)){
+            if (!strcmp(buffer, node->word)) {
                 found = 1;
                 break;
             }
             node = node->next;
         }
-        if(found == 0) {
+        if (found == 0) {
             fprintf(stderr, "Word: %s, not found in dictionary", buffer);
             free(buffer);
             return 1;
@@ -41,8 +41,7 @@ int check(char** crossword, int crossward_size, Wordnode* words, int hor_count, 
         write_word(crossword, words[0][count], 0, buffer);
         count++;
     }
-
-    if(count != hor_count){
+    if (count != hor_count) {
         fprintf(stderr, "Needed more words");
         free(buffer);
         return 1;
@@ -204,31 +203,26 @@ int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, 
     int i = hor_count, j = ver_count;
     while (i || j) {
         if (i) {
-            char* filter = create_filter(crossword, words[0][i - 1], 0);
 
+            char* filter = create_filter(crossword, words[0][i - 1], 0);
             Word_finder word_finder = find_word(dictionary, filter);    
-            free(filter);
             char* word = word_finder->word;
-            //Dictnode next = word_finder->next;
+            Dictnode next = word_finder->next;
             free(word_finder);
+            free(filter);
+
             write_word(crossword, words[0][i - 1], 0, word);
-            draw_crossword(crossword, crossword_size);
 
             --i;
         }
         if (j) {
-            char* filter = create_filter(crossword, words[1][j - 1], 1);
-
-            Word_finder word_finder = find_word(dictionary, filter);    
-            free(filter);
-            char* word = word_finder->word;
-            //Dictnode next = word_finder->next;
-            free(word_finder);
-            write_word(crossword, words[1][j - 1], 1, word);
-            draw_crossword(crossword, crossword_size);
-
             --j;
         }
     }
     return 0;
+}
+
+char* word_written(char* word, char* filter) {
+    int size = strlen(word);
+
 }

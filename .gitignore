@@ -1,5 +1,6 @@
 # Ignore mine
 out
+hashthings.c
 
 # Prerequisites
 *.d

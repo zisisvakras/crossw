@@ -109,3 +109,22 @@ Word_finder find_word(Dictnode* dictionary, char* filter) {
     }
     return NULL;
 }
+
+Word_finder find_word_with_node(Dictnode node, char* filter) {
+    int i, word_size = strlen(filter);
+    char* word;
+    while ((word = node->word) != NULL) {
+        for (i = 0 ; i < word_size ; i++) {
+            if (filter[i] == '?') continue;
+            if (word[i] != filter[i]) break;
+        }
+        if (i == word_size) {
+            Word_finder ret = malloc(sizeof(struct Word_finderstruct));
+            ret->word = word;
+            ret->next = node->next;
+            return ret;
+        }
+        node = node->next;
+    }
+    return NULL;
+}
