@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
     char* dictionary_path = "Words.txt";
     char* crossword_path = argv[1];
     char* arg;
-    //int check_mode = 0;
-    //int draw_mode = 0;
+    int check_mode = 0;
+    int draw_mode = 0;
     while (--argc) {
         if ((arg = argv[argc])) {
             if (!strcmp(arg, "-dict")) {
@@ -31,12 +31,12 @@ int main(int argc, char** argv) {
                 }
                 dictionary_path = argv[argc + 1];
             }
-            // if (!strcmp(arg, "-check")) {
-            //     check_mode = 1;
-            // }
-            // if (!strcmp(arg, "-draw")) {
-            //     draw_mode = 1;
-            // }
+            if (!strcmp(arg, "-check")) {
+                check_mode = 1;
+            }
+            if (!strcmp(arg, "-draw")) {
+                draw_mode = 1;
+            }
         }
     } 
     FILE* crossword_file = fopen(crossword_path, "r");
@@ -90,20 +90,19 @@ int main(int argc, char** argv) {
     if (dictionary == NULL) { /* Check dict.c for errors */
         return errno;
     }
-    //print_dict(dictionary, max_word_size);
-
-    // for (int i = 0 ; i < 1000000 ; i++) {
-    //     find_word(dictionary, "zygote"); // last 6 letter word
-    // }
-    /* Closing files and deallocating memory */
+    
     struct Map_ret* ret = map_crossword(crossword, crossword_size);
     Wordnode* words = ret->words;
     int hor_count = ret->hor_count;
     int ver_count = ret->ver_count;
     free(ret);
-
+    if (check_mode) {
+        int ret_check = check_crossword(crossword, crossword_size, words, hor_count, ver_count, dictionary);
+        if (draw_mode) draw_crossword(crossword, crossword_size);
+        return ret_check;
+    }
     solve_crossword(crossword, crossword_size, dictionary, words, hor_count, ver_count);
-    
+    if (draw_mode) draw_crossword(crossword, crossword_size);
     fclose(crossword_file);
     free_dict(dictionary, max_word_size);
     printf("dict: %s cross: %s max: %d\n", dictionary_path, crossword_path, max_word_size);

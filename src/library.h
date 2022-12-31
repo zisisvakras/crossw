@@ -42,6 +42,7 @@ char* create_filter(char** crossword, Word word, int flag);
 void write_word(char** crossword, Word node, int flag, char* word);
 void delete_word(char** crossword, Word node, int flag, char* word);
 int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, Wordnode* words, int hor_count, int ver_count);
+int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, int ver_count, Dictnode* dictionary);
 
 /* dict.c functions */
 Dictnode* make_dict(char* dictionary_path, int max_word_size);

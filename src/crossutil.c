@@ -14,37 +14,43 @@ void draw_crossword(char** crossword, int crossword_size) {
     }
 }
 
-int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, Dictnode* dictionary) {
+//TODO malloc check
+int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, int ver_count, Dictnode* dictionary) {
     char* buffer = malloc(sizeof(char) * 81);
     int count = 0;
     while (fscanf(stdin, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
         if (words[0][count].end - words[0][count].begin + 1 != word_size) {
-            fprintf(stderr, "Word: %s, could not be placed\n", buffer);
+            fprintf(stderr, "Word \"%s\" could not be placed\n", buffer);
             free(buffer);
             return 1;
-        } 
-        int found = 0;
-        Dictnode node = dictionary[word_size - 1];
-        while (node->word != NULL) {
-            if (!strcmp(buffer, node->word)) {
-                found = 1;
-                break;
-            }
-            node = node->next;
         }
-        if (found == 0) {
-            fprintf(stderr, "Word: %s, not found in dictionary", buffer);
+        if (find_word(dictionary, buffer) == NULL) {
+            fprintf(stderr, "Word \"%s\" not in dictionary", buffer);
             free(buffer);
             return 1;
         }
         write_word(crossword, words[0][count], 0, buffer);
         count++;
     }
+
     if (count != hor_count) {
-        fprintf(stderr, "Needed more words");
-        free(buffer);
+        fprintf(stderr, "Not enough words");
         return 1;
+    }
+
+    for(int i = 0; i < ver_count; i++){
+        Word word = words[1][i];
+        int k = 0;
+        for (int j = word.begin ; j < word.end ; j++, k++){
+            buffer[k] = crossword[j][word.constant];
+        }
+        buffer[k] = '\0';
+        if (find_word(dictionary, buffer) == NULL) {
+            fprintf(stderr, "Word \"%s\" not in dictionary", buffer);
+            free(buffer);
+            return 1;
+        }
     }
     free(buffer);
     return 0;
@@ -199,7 +205,7 @@ void delete_word(char** crossword, Word node, int flag, char* word) {
 }
 
 int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, Wordnode* words, int hor_count, int ver_count) {
-    //Actionnode actions = malloc(sizeof(Action));
+    Actionnode actions = malloc(sizeof(Action));
     int i = hor_count, j = ver_count;
     while (i || j) {
         if (i) {
@@ -208,9 +214,13 @@ int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, 
             Word_finder word_finder = find_word(dictionary, filter);    
             char* word = word_finder->word;
             Dictnode next = word_finder->next;
+            char* written = word_written(word, filter);
             free(word_finder);
             free(filter);
-
+            actions->changed = written;
+            actions->dictnode = next;
+            actions->wordnode = &words[0][i - 1];
+            //Actions next and previous
             write_word(crossword, words[0][i - 1], 0, word);
 
             --i;
@@ -222,7 +232,13 @@ int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, 
     return 0;
 }
 
+//TODO check null
 char* word_written(char* word, char* filter) {
     int size = strlen(word);
-
+    char* written = malloc((size + 1) * sizeof(char));
+    for (int i = 0 ; i < size ; i++) {
+        written[i] = filter[i] == '?' ? word[i] : '?';
+    }
+    written[size] = '\0';
+    return written;
 }
