@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "library.h"
 
 void draw_crossword(char** crossword, int crossword_size) {
@@ -10,6 +11,46 @@ void draw_crossword(char** crossword, int crossword_size) {
             putchar(crossword[i][j] == '#' ? '#' : ' ');
         }
         putchar('\n');
+    }
+}
+
+void check(char** crossword,int crossward_size,Wordnode* words_pos,int hor_count,Dictnode* dictionary){
+    char* buffer = malloc(sizeof(char) * 81);
+    int count = 0;
+    while (fscanf(stdin, "%80s", buffer) == 1){
+        int word_size = strlen(buffer);
+
+        if(words_pos[0][count].end - (words_pos[0][count].begin - 1) != word_size){
+            fprintf(stderr,"Word: %s ,could not be placed");
+            return;
+        } 
+
+        int flag = 0;
+        Dictnode node = dictionary[word_size - 1];
+        while ((buffer = node->word) != NULL) {
+            if(strcmp(buffer,node->word)){
+                flag = 1;
+                break;
+            }
+            node = node->next;
+        }
+
+        if(flag==0){
+            fprintf(stderr,"Word: %s ,not found in dictionary",buffer);
+            return;
+        }
+
+        //word is in dictionary and now it will be placed
+        write_word(crossword,words_pos[0][count],0,buffer);
+        count++;
+
+        //TODO add check if the vertical words created are valid
+        //kati legame gia binary tree gia na kanoume grhgora ta checks, to afhnw pros to paron
+    }
+
+    if(count != hor_count){
+        fprintf(stderr,"Invalid count of words");
+        return;
     }
 }
 
@@ -162,7 +203,7 @@ void delete_word(char** crossword, Word node, int flag, char* word) {
 }
 
 int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, Wordnode* words, int hor_count, int ver_count) {
-    Actionnode actions = malloc(sizeof(Action));
+    //Actionnode actions = malloc(sizeof(Action));
     int i = hor_count, j = ver_count;
     while (i || j) {
         if (i) {
@@ -171,7 +212,7 @@ int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, 
             Word_finder word_finder = find_word(dictionary, filter);    
             free(filter);
             char* word = word_finder->word;
-            Dictnode next = word_finder->next;
+            //Dictnode next = word_finder->next;
             free(word_finder);
             write_word(crossword, words[0][i - 1], 0, word);
             draw_crossword(crossword, crossword_size);
