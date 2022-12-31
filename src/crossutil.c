@@ -21,6 +21,7 @@ int check(char** crossword, int crossward_size, Wordnode* words, int hor_count, 
         int word_size = strlen(buffer);
         if(words[0][count].end - words[0][count].begin + 1 != word_size){
             fprintf(stderr, "Word: %s, could not be placed\n", buffer);
+            free(buffer);
             return 1;
         } 
         int found = 0;
@@ -34,6 +35,7 @@ int check(char** crossword, int crossward_size, Wordnode* words, int hor_count, 
         }
         if(found == 0) {
             fprintf(stderr, "Word: %s, not found in dictionary", buffer);
+            free(buffer);
             return 1;
         }
         write_word(crossword, words[0][count], 0, buffer);
@@ -42,8 +44,10 @@ int check(char** crossword, int crossward_size, Wordnode* words, int hor_count, 
 
     if(count != hor_count){
         fprintf(stderr, "Needed more words");
+        free(buffer);
         return 1;
     }
+    free(buffer);
     return 0;
 }
 
