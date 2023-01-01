@@ -106,6 +106,11 @@ Word_finder find_word(Dictnode* dictionary, char* filter) {
         }
         if (i == word_size) {
             Word_finder ret = malloc(sizeof(struct Word_finderstruct));
+            if (ret == NULL) { /* Malloc error handling */
+                fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+                return NULL;
+            }
+
             ret->word = word;
             ret->next = node->next;
             return ret;
@@ -125,6 +130,11 @@ Word_finder find_word_with_node(Dictnode node, char* filter) {
         }
         if (i == word_size) {
             Word_finder ret = malloc(sizeof(struct Word_finderstruct));
+            if (ret == NULL) { /* Malloc error handling */
+                fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+                return NULL;
+            }
+
             ret->word = word;
             ret->next = node->next;
             return ret;

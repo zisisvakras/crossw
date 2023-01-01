@@ -20,8 +20,18 @@ int init_crossword(char* crossword_path, char*** crossword, int* crossword_size,
     
     //TODO check null pointer
     (*crossword) = malloc((*crossword_size) * sizeof(char*));
+    if (*crossword == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return 1;
+    }
+
     for (int i = 0 ; i < (*crossword_size) ; i++) {
         (*crossword)[i] = malloc((*crossword_size) * sizeof(char));
+        if ((*crossword)[i] == NULL) { /* Malloc error handling */
+            fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+            return errno;
+        }
+
         for (int j = 0 ; j < (*crossword_size) ; j++) {
             (*crossword)[i][j] = '-';
         }
@@ -68,6 +78,11 @@ void draw_crossword(char** crossword, int crossword_size) {
 //TODO malloc check
 int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, int ver_count, Dictnode* dictionary) {
     char* buffer = malloc(sizeof(char) * 81);
+    if (buffer == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return errno;
+    }
+
     int count = 0;
     while (fscanf(stdin, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
@@ -132,8 +147,17 @@ struct Map_ret* map_crossword(char** crossword, int crossword_size) {
         ver_size = 0;
     }
     Wordnode* words = malloc(2 * sizeof(Wordnode));
+    if (words == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return NULL;
+    }
+
     words[0] = malloc(hor_count * sizeof(Word));
     words[1] = malloc(ver_count * sizeof(Word));
+    if (words[0] == NULL || words[1] == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return NULL;
+    }
 
     int begin_hor, begin_ver;
     int hor_index = 0, ver_index = 0;
@@ -187,6 +211,10 @@ struct Map_ret* map_crossword(char** crossword, int crossword_size) {
     }
 
     struct Map_ret* ret = malloc(sizeof(struct Map_ret));
+    if (ret == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return NULL;
+    }
     ret->words = words;
     ret->hor_count = hor_count;
     ret->ver_count = ver_count;
@@ -208,6 +236,11 @@ void print_words(Wordnode* words, int hor_count, int ver_count) {
 char* create_filter(char** crossword, Word word, int flag) {
     int filter_size = word.end - word.begin + 1;
     char* filter = malloc((filter_size + 1) * sizeof(char));
+    if (filter == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return NULL;
+    }
+
     if (flag) {
         for (int i = word.begin, j = 0 ; i <= word.end ; i++, j++) {
             char temp = crossword[i][word.constant];
@@ -256,6 +289,11 @@ void delete_word(char** crossword, Word node, int flag, char* word) {
 
 int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, Wordnode* words, int hor_count, int ver_count) {
     Actionnode actions = malloc(sizeof(Action));
+    if (actions == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return errno;
+    }
+
     int i = hor_count, j = ver_count;
     while (i || j) {
         if (i) {
@@ -286,6 +324,10 @@ int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, 
 char* word_written(char* word, char* filter) {
     int size = strlen(word);
     char* written = malloc((size + 1) * sizeof(char));
+    if (written == NULL) { /* Malloc error handling */
+        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
+        return NULL;
+    }
     for (int i = 0 ; i < size ; i++) {
         written[i] = filter[i] == '?' ? word[i] : '?';
     }
