@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Werror -Wextra
+CFLAGS = -g3#-Wall -Werror -Wextra
 
 crossw: crossw.o crossutil.o dict.o
 	$(CC) $(CFLAGS) crossw.o crossutil.o dict.o -o crossw

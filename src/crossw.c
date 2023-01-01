@@ -38,53 +38,11 @@ int main(int argc, char** argv) {
                 draw_mode = 1;
             }
         }
-    } 
-    FILE* crossword_file = fopen(crossword_path, "r");
-    if (crossword_file == NULL) { /* File error handling */
-        fprintf(stderr, "Error while handling dictionary: %s", strerror(errno));
-        return errno;
-    }
-
-    int crossword_size = 0;
-    if (fscanf(crossword_file, "%d", &crossword_size) != 1) {
-        fprintf(stderr, "Error while reading size of crossword"); /* If scan didn't read 1 integer throw error */
-        return errno;
     }
     
-    //TODO check null pointer
-    char** crossword = malloc(crossword_size * sizeof(char*));
-    for (int i = 0 ; i < crossword_size ; i++) {
-        crossword[i] = malloc(crossword_size * sizeof(char));
-        //TODO remove later
-        for (int j = 0 ; j < crossword_size ; j++) {
-            crossword[i][j] = '-';
-        }
-    }
-
-    int x, y;
-    while (fscanf(crossword_file, "%d %d", &x, &y) == 2) { /* While it continues to read black tiles */
-        crossword[x - 1][y - 1] = '#';
-    }
-    /* Biggest word finder */
-    int max_word_size = 0;
-    for (int i = 0 ; i < crossword_size ; i++) {
-        int len_row = 0;
-        int len_col = 0;
-        for (int j = 0 ; j < crossword_size ; j++) {
-            if (crossword[i][j] == '#') {
-                if (len_row > max_word_size) max_word_size = len_row;
-                len_row = 0;
-            }
-            if (crossword[i][j] == '-') len_row++;
-            if (crossword[j][i] == '#') {
-                if (len_col > max_word_size) max_word_size = len_col;
-                len_col = 0;
-            }
-            if (crossword[j][i] == '-') len_col++;
-        }
-        if (len_row > max_word_size) max_word_size = len_row;
-        if (len_col > max_word_size) max_word_size = len_col;
-    }
+    char** crossword;
+    int max_word_size = 0, crossword_size = 0;
+    if (init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size)) return errno;
 
     Dictnode* dictionary = make_dict(dictionary_path, max_word_size);
     if (dictionary == NULL) { /* Check dict.c for errors */
@@ -103,7 +61,7 @@ int main(int argc, char** argv) {
     }
     solve_crossword(crossword, crossword_size, dictionary, words, hor_count, ver_count);
     if (draw_mode) draw_crossword(crossword, crossword_size);
-    fclose(crossword_file);
+    draw_crossword(crossword, crossword_size);
     free_dict(dictionary, max_word_size);
     printf("dict: %s cross: %s max: %d\n", dictionary_path, crossword_path, max_word_size);
     return 0;

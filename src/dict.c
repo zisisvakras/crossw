@@ -61,7 +61,12 @@ Dictnode* make_dict(char* dictionary_path, int max_word_size) {
         }
         dictionary_end[word_size - 1] = node->next; /* Change end node to the next one */
     }
-    
+
+    for (int i = 0 ; i < max_word_size ; i++) {
+        dictionary_end[i]->word = NULL;
+        dictionary_end[i]->next = NULL;
+    }
+
     fclose(dictionary_file);
     free(dictionary_end); /* Free excess memory */
     free(buffer);

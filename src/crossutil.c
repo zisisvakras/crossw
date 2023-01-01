@@ -1,7 +1,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "library.h"
+
+extern int errno;
+
+int init_crossword(char* crossword_path, char*** crossword, int* crossword_size, int* max_word_size) {
+    FILE* crossword_file = fopen(crossword_path, "r");
+    if (crossword_file == NULL) { /* File error handling */
+        fprintf(stderr, "Error while handling crossword: %s", strerror(errno));
+        return errno;
+    }
+
+    if (fscanf(crossword_file, "%d", crossword_size) != 1) {
+        fprintf(stderr, "Error while reading size of crossword"); /* If scan didn't read 1 integer throw error */
+        return errno;
+    }
+    
+    //TODO check null pointer
+    (*crossword) = malloc((*crossword_size) * sizeof(char*));
+    for (int i = 0 ; i < (*crossword_size) ; i++) {
+        (*crossword)[i] = malloc((*crossword_size) * sizeof(char));
+        for (int j = 0 ; j < (*crossword_size) ; j++) {
+            (*crossword)[i][j] = '-';
+        }
+    }
+
+    int x, y;
+    while (fscanf(crossword_file, "%d %d", &x, &y) == 2) { /* While it continues to read black tiles */
+        (*crossword)[x - 1][y - 1] = '#';
+    }
+    /* Biggest word finder */
+    for (int i = 0 ; i < (*crossword_size) ; i++) {
+        int len_row = 0;
+        int len_col = 0;
+        for (int j = 0 ; j < (*crossword_size) ; j++) {
+            if ((*crossword)[i][j] == '#') {
+                if (len_row > (*max_word_size)) (*max_word_size) = len_row;
+                len_row = 0;
+            }
+            if ((*crossword)[i][j] == '-') len_row++;
+            if ((*crossword)[j][i] == '#') {
+                if (len_col > (*max_word_size)) (*max_word_size) = len_col;
+                len_col = 0;
+            }
+            if ((*crossword)[j][i] == '-') len_col++;
+        }
+        if (len_row > (*max_word_size)) (*max_word_size) = len_row;
+        if (len_col > (*max_word_size)) (*max_word_size) = len_col;
+    }
+    
+    fclose(crossword_file);
+}
 
 void draw_crossword(char** crossword, int crossword_size) {
     for (int i = 0 ; i < crossword_size ; i++) {
@@ -80,7 +131,6 @@ struct Map_ret* map_crossword(char** crossword, int crossword_size) {
         hor_size = 0;
         ver_size = 0;
     }
-    printf("hor: %d, ver: %d\n", hor_count, ver_count);
     Wordnode* words = malloc(2 * sizeof(Wordnode));
     words[0] = malloc(hor_count * sizeof(Word));
     words[1] = malloc(ver_count * sizeof(Word));
