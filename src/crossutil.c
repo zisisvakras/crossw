@@ -12,7 +12,7 @@ int init_crossword(char* crossword_path, char*** crossword, int* crossword_size,
         fprintf(stderr, "Error while handling crossword: %s", strerror(errno));
         return errno;
     }
-
+    //TODO errno and return
     if (fscanf(crossword_file, "%d", crossword_size) != 1) {
         fprintf(stderr, "Error while reading size of crossword"); /* If scan didn't read 1 integer throw error */
         return errno;
@@ -151,14 +151,14 @@ struct Map_ret* map_crossword(char** crossword, int crossword_size) {
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return NULL;
     }
-
+    //TODO errno and return
     words[0] = malloc(hor_count * sizeof(Word));
     words[1] = malloc(ver_count * sizeof(Word));
     if (words[0] == NULL || words[1] == NULL) { /* Malloc error handling */
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return NULL;
     }
-
+    //TODO errno and return
     int begin_hor, begin_ver;
     int hor_index = 0, ver_index = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
@@ -215,6 +215,7 @@ struct Map_ret* map_crossword(char** crossword, int crossword_size) {
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return NULL;
     }
+    //TODO errno and return
     ret->words = words;
     ret->hor_count = hor_count;
     ret->ver_count = ver_count;
@@ -293,7 +294,7 @@ int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, 
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return errno;
     }
-
+    //TODO errno and return
     int i = hor_count, j = ver_count;
     while (i || j) {
         if (i) {
@@ -328,6 +329,7 @@ char* word_written(char* word, char* filter) {
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return NULL;
     }
+    //TODO errno and return
     for (int i = 0 ; i < size ; i++) {
         written[i] = filter[i] == '?' ? word[i] : '?';
     }

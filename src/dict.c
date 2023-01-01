@@ -14,6 +14,7 @@ Dictnode* make_dict(char* dictionary_path, int max_word_size) {
         fprintf(stderr, "Error while handling dictionary: %s", strerror(errno));
         return NULL;
     }
+    //TODO errno and return
 
     /* Allocate enough linked lists for all needed word sizes */
     Dictnode* dictionary = malloc(max_word_size * sizeof(Dictnode));
@@ -21,12 +22,14 @@ Dictnode* make_dict(char* dictionary_path, int max_word_size) {
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return NULL;
     }
+    //TODO errno and return
     for (int i = 0 ; i < max_word_size ; i++) {
         dictionary[i] = malloc(sizeof(struct Dictionary));
         if (dictionary[i] == NULL) { /* Malloc error handling */
             fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
             return NULL;
         }
+        //TODO errno and return
     }
 
     /* Array to hold pointers at the end of the list */
@@ -44,6 +47,7 @@ Dictnode* make_dict(char* dictionary_path, int max_word_size) {
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return NULL;
     }
+    //TODO errno and return
     while (fscanf(dictionary_file, "%80s", buffer) == 1) { /* Scan 1 word at a time */
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue; /* No need to allocate larger words than needed */
@@ -53,12 +57,14 @@ Dictnode* make_dict(char* dictionary_path, int max_word_size) {
             fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
             return NULL;
         }
+        //TODO errno and return
         strcpy(node->word, buffer); /* Copy word in buffer to node */
         node->next = malloc(sizeof(struct Dictionary)); /* Allocate next node */
         if (node->next == NULL) { /* Malloc error handling */
             fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
             return NULL;
         }
+        //TODO errno and return
         dictionary_end[word_size - 1] = node->next; /* Change end node to the next one */
     }
 
@@ -110,7 +116,7 @@ Word_finder find_word(Dictnode* dictionary, char* filter) {
                 fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
                 return NULL;
             }
-
+            //TODO errno and return
             ret->word = word;
             ret->next = node->next;
             return ret;
@@ -134,7 +140,7 @@ Word_finder find_word_with_node(Dictnode node, char* filter) {
                 fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
                 return NULL;
             }
-
+            //TODO errno and return
             ret->word = word;
             ret->next = node->next;
             return ret;
