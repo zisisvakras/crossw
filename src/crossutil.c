@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "library.h"
+#include "extrafuns.h"
 
 extern int errno;
 
@@ -60,8 +60,8 @@ int init_crossword(char* crossword_path, char*** crossword, int* crossword_size,
         if (len_row > (*max_word_size)) (*max_word_size) = len_row;
         if (len_col > (*max_word_size)) (*max_word_size) = len_col;
     }
-    
     fclose(crossword_file);
+    return 0;
 }
 
 void draw_crossword(char** crossword, int crossword_size) {
@@ -96,7 +96,7 @@ int check_crossword(char** crossword, int crossward_size, Wordnode* words, int h
             free(buffer);
             return 1;
         }
-        write_word(crossword, words[0][count], 0, buffer);
+        write_word(crossword, words[0][count], buffer);
         count++;
     }
 
@@ -122,119 +122,9 @@ int check_crossword(char** crossword, int crossward_size, Wordnode* words, int h
     return 0;
 }
 
-//TODO fix variable names
-struct Map_ret* map_crossword(char** crossword, int crossword_size) {
-    int hor_count = 0;
-    int ver_count = 0;
-    int hor_size = 0;
-    int ver_size = 0;
-    for (int i = 0 ; i < crossword_size ; i++) {
-        for (int j = 0 ; j < crossword_size ; j++) {
-            if (crossword[i][j] != '#') hor_size++;
-            if (crossword[i][j] == '#') {
-                if (hor_size > 1) hor_count++;
-                hor_size = 0;
-            }
-            if (crossword[j][i] != '#') ver_size++;
-            if (crossword[j][i] == '#') {
-                if (ver_size > 1) ver_count++;
-                ver_size = 0;
-            }
-        }
-        if (hor_size > 1) hor_count++;
-        if (ver_size > 1) ver_count++;
-        hor_size = 0;
-        ver_size = 0;
-    }
-    Wordnode* words = malloc(2 * sizeof(Wordnode));
-    if (words == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
-    //TODO errno and return
-    words[0] = malloc(hor_count * sizeof(Word));
-    words[1] = malloc(ver_count * sizeof(Word));
-    if (words[0] == NULL || words[1] == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
-    //TODO errno and return
-    int begin_hor, begin_ver;
-    int hor_index = 0, ver_index = 0;
-    for (int i = 0 ; i < crossword_size ; i++) {
-        for (int j = 0 ; j < crossword_size ; j++) {
-            if (crossword[i][j] != '#') {
-                if (hor_size == 0) {
-                    begin_hor = j;
-                }
-                hor_size++;
-            }
-            if (crossword[i][j] == '#') {
-                if (hor_size > 1) {
-                    words[0][hor_index].constant = i;
-                    words[0][hor_index].begin = begin_hor;
-                    words[0][hor_index].end = j - 1;
-                    hor_index++;
-                }
-                hor_size = 0;
-            }
-            if (crossword[j][i] != '#') {
-                if (ver_size == 0) {
-                    begin_ver = j;
-                }
-                ver_size++;
-            }
-            if (crossword[j][i] == '#') {
-                if (ver_size > 1) {
-                    words[1][ver_index].constant = i;
-                    words[1][ver_index].begin = begin_ver;
-                    words[1][ver_index].end = j - 1;
-                    ver_index++;
-                }
-                ver_size = 0;
-            }
-        }
-        if (hor_size > 1) {
-            words[0][hor_index].constant = i;
-            words[0][hor_index].begin = begin_hor;
-            words[0][hor_index].end = crossword_size - 1;
-            hor_index++;
-        }
-        if (ver_size > 1) {
-            words[1][ver_index].constant = i;
-            words[1][ver_index].begin = begin_ver;
-            words[1][ver_index].end = crossword_size - 1;
-            ver_index++;
-        }
-        hor_size = 0;
-        ver_size = 0;
-    }
-
-    struct Map_ret* ret = malloc(sizeof(struct Map_ret));
-    if (ret == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
-    //TODO errno and return
-    ret->words = words;
-    ret->hor_count = hor_count;
-    ret->ver_count = ver_count;
-    return ret;
-}
-
-void print_words(Wordnode* words, int hor_count, int ver_count) {
-    printf("\nHorizontal words:\n");
-    for (int i = 0 ; i < hor_count ; i++) {
-        printf("%d. row: %d begin: %d end: %d\n", i+1, words[0][i].constant, words[0][i].begin, words[0][i].end);
-    }
-    printf("\nVertical words:\n");
-    for (int i = 0 ; i < ver_count ; i++) {
-        printf("%d. col: %d begin: %d end: %d\n", i+1, words[1][i].constant, words[1][i].begin, words[1][i].end);
-    }
-}
-
 //TODO after finished project check if filters are getting freed
-char* create_filter(char** crossword, Word word, int flag) {
+char* create_filter(char** crossword, Word word) {
+    int flag = word.orientation;
     int filter_size = word.end - word.begin + 1;
     char* filter = malloc((filter_size + 1) * sizeof(char));
     if (filter == NULL) { /* Malloc error handling */
@@ -258,81 +148,196 @@ char* create_filter(char** crossword, Word word, int flag) {
     return filter;
 }
 
-void write_word(char** crossword, Word node, int flag, char* word) {
-    if (flag) {
-        for (int i = node.begin, j = 0 ; i <= node.end ; i++, j++) {
-            crossword[i][node.constant] = word[j];
-        }
-    }
-    else {
-        for (int i = node.begin, j = 0 ; i <= node.end ; i++, j++) {
-            crossword[node.constant][i] = word[j];
-        }
-    }
-}
-
-void delete_word(char** crossword, Word node, int flag, char* word) {
-    if (flag) {
-        for (int i = node.begin, j = 0 ; i <= node.end ; i++, j++) {
-            if (word[j] != '?') {
-                crossword[i][node.constant] = '-';
-            }
-        }
-    }
-    else {
-        for (int i = node.begin, j = 0 ; i <= node.end ; i++, j++) {
-            if (word[j] != '?') {  
-                crossword[node.constant][i] = '-';
-            }
-        }
-    }
-}
-
 int solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, Wordnode* words, int hor_count, int ver_count) {
+    int unsolvable_flag = 0;
     Actionnode actions = malloc(sizeof(Action));
-    if (actions == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return errno;
-    }
-    //TODO errno and return
+    In_Use in_use_nodes = malloc(sizeof(struct smthtochange));
+    In_Use in_use_nodes_end = in_use_nodes;
+    actions->prev = NULL;
     int i = hor_count, j = ver_count;
+    if (i) {
+        /* Find word in dictionary */
+        char* filter = create_filter(crossword, words[0][i - 1]);
+        Word_finder word_finder = find_word(dictionary, filter);//TODO check if no word in dict
+        if (word_finder == NULL) {
+            fprintf(stderr, "Couldn't solve crossword\n");
+            return 1;
+        }
+        char* word = word_finder->word;
+        Dictnode node = word_finder->node;
+        char* written = word_written(word, filter);
+        free(word_finder);
+        free(filter);
+
+        /* Mark dictnode in use */
+        in_use_nodes_end->next = malloc(sizeof(struct smthtochange));
+        in_use_nodes_end = in_use_nodes_end->next;
+        in_use_nodes_end->node = node;
+        in_use_nodes_end->next = NULL;
+
+        /* Add the action */
+        actions->dictnode = node;
+        actions->changed = written;
+        actions->wordnode = &words[0][i - 1];
+        
+        /* Make links */
+        Actionnode next_node = malloc(sizeof(Action));
+        Actionnode prev_node = actions;
+        actions->next = next_node;
+        actions = actions->next;
+        actions->prev = prev_node;
+
+        write_word(crossword, words[0][i - 1], word);
+        --i;
+    }
     while (i || j) {
         if (i) {
+            /* Find word in dictionary */
+            char* filter = create_filter(crossword, words[0][i - 1]);
+            Word_finder word_finder;
+            Dictnode find_start = dictionary[strlen(filter) - 1];
+            while (is_in_use(in_use_nodes, (word_finder = find_word_with_node(find_start, filter)))) {
+                if (word_finder == NULL) {
+                    Actionnode this_action = actions;
+                    if ((actions = actions->prev) == NULL) {
+                        unsolvable_flag = 1;
+                        break;
+                    }
+                    
+                    free(this_action);
+                    delete_word(crossword, *actions->wordnode, actions->changed);
+                    if (actions->wordnode->orientation) j++;
+                    else i++;
 
-            char* filter = create_filter(crossword, words[0][i - 1], 0);
-            Word_finder word_finder = find_word(dictionary, filter);    
+                    //Unmark node
+                    In_Use find_in_use_prev = in_use_nodes;
+                    In_Use find_in_use;
+                    while ((find_in_use = find_in_use_prev->next) != NULL) {
+                        if (find_in_use->node == actions->dictnode) {
+                            In_Use find_in_use_next = find_in_use->next;
+                            free(find_in_use);
+                            find_in_use_prev->next = find_in_use_next;
+                            break;
+                        }
+                        find_in_use_prev = find_in_use;
+                    }
+                    filter = create_filter(crossword, words[0][i - 1]);
+                }
+                find_start = word_finder == NULL ? dictionary[strlen(filter) - 1] : word_finder->node->next;
+            }
+            if (unsolvable_flag == 1) {
+                fprintf(stderr, "Couldn't solve crossword\n");
+                return 1;
+            }
             char* word = word_finder->word;
-            Dictnode next = word_finder->next;
+            Dictnode node = word_finder->node;
             char* written = word_written(word, filter);
             free(word_finder);
+            printf("filter: %s, word: %s\n", filter, word);
             free(filter);
-            actions->changed = written;
-            actions->dictnode = next;
-            actions->wordnode = &words[0][i - 1];
-            //Actions next and previous
-            write_word(crossword, words[0][i - 1], 0, word);
 
+            /* Mark dictnode in use */
+            in_use_nodes_end->next = malloc(sizeof(struct smthtochange));
+            in_use_nodes_end = in_use_nodes_end->next;
+            in_use_nodes_end->node = node;
+            in_use_nodes_end->next = NULL;
+
+            /* Add the action */
+            actions->changed = written;
+            actions->wordnode = &words[0][i - 1];
+
+            /* Make links */
+            Actionnode next_node = malloc(sizeof(Action));
+            Actionnode prev_node = actions;
+            actions->next = next_node;
+            actions = actions->next;
+            actions->prev = prev_node;
+            
+            write_word(crossword, words[0][i - 1], word);
+            
+            draw_crossword(crossword, crossword_size);
             --i;
         }
         if (j) {
+            /* Find word in dictionary */
+            char* filter = create_filter(crossword, words[1][j - 1]);
+            Word_finder word_finder;
+            Dictnode find_start = dictionary[strlen(filter) - 1];
+            while (is_in_use(in_use_nodes, (word_finder = find_word_with_node(find_start, filter)))) {
+                if (word_finder == NULL) {
+                    Actionnode this_action = actions;
+                    if ((actions = actions->prev) == NULL) {
+                        unsolvable_flag = 1;
+                        break;
+                    }
+                    
+                    free(this_action);
+                    delete_word(crossword, *actions->wordnode, actions->changed);
+                    if (actions->wordnode->orientation) j++;
+                    else i++;
+
+                    //Unmark node
+                    In_Use find_in_use_prev = in_use_nodes;
+                    In_Use find_in_use;
+                    while ((find_in_use = find_in_use_prev->next) != NULL) {
+                        if (find_in_use->node == actions->dictnode) {
+                            In_Use find_in_use_next = find_in_use->next;
+                            free(find_in_use);
+                            find_in_use_prev->next = find_in_use_next;
+                            break;
+                        }
+                        find_in_use_prev = find_in_use;
+                    }
+                    filter = create_filter(crossword, words[1][j - 1]);
+                }
+                find_start = word_finder == NULL ? dictionary[strlen(filter) - 1] : word_finder->node->next;
+            }
+            if (unsolvable_flag == 1) {
+                fprintf(stderr, "Couldn't solve crossword\n");
+                return 1;
+            }
+            char* word = word_finder->word;
+            Dictnode node = word_finder->node;
+            char* written = word_written(word, filter);
+            
+            printf("filter: %s, word: %s\n", filter, word);
+            free(word_finder);
+            free(filter);
+
+            /* Mark dictnode in use */
+            in_use_nodes_end->next = malloc(sizeof(struct smthtochange));
+            in_use_nodes_end = in_use_nodes_end->next;
+            in_use_nodes_end->node = node;
+            in_use_nodes_end->next = NULL;
+
+            /* Add the action */
+            actions->changed = written;
+            actions->wordnode = &words[1][j - 1];
+
+            /* Make links */
+            Actionnode next_node = malloc(sizeof(Action));
+            Actionnode prev_node = actions;
+            actions->next = next_node;
+            actions = actions->next;
+            actions->prev = prev_node;
+            
+            write_word(crossword, words[1][j - 1], word);
+            
+            draw_crossword(crossword, crossword_size);
             --j;
         }
     }
     return 0;
 }
 
-//TODO check null
-char* word_written(char* word, char* filter) {
-    int size = strlen(word);
-    char* written = malloc((size + 1) * sizeof(char));
-    if (written == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
+int is_in_use(In_Use in_use_nodes, Word_finder word_finder) {
+    if(word_finder == NULL) return 1;
+    Dictnode node = word_finder->node;
+    In_Use find_in_use_prev = in_use_nodes;
+    In_Use find_in_use;
+    while ((find_in_use = find_in_use_prev->next) != NULL) {
+        if (find_in_use->node == node) return 1;
+        find_in_use_prev = find_in_use;
     }
-    //TODO errno and return
-    for (int i = 0 ; i < size ; i++) {
-        written[i] = filter[i] == '?' ? word[i] : '?';
-    }
-    written[size] = '\0';
-    return written;
+    return 0;
 }

@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "library.h"
+#include "extrafuns.h"
 
 extern int errno;
-
 
 //TODO better alphabet for sorted double linked list by total (freq) value of letters
 //TODO make dictionary also go backwards maybe
@@ -49,11 +48,10 @@ int main(int argc, char** argv) {
         return errno;
     }
     
-    struct Map_ret* ret = map_crossword(crossword, crossword_size);
-    Wordnode* words = ret->words;
-    int hor_count = ret->hor_count;
-    int ver_count = ret->ver_count;
-    free(ret);
+    int hor_count = 0;
+    int ver_count = 0;
+    Wordnode* words = map_words(crossword, crossword_size, &hor_count, &ver_count);
+
     if (check_mode) {
         int ret_check = check_crossword(crossword, crossword_size, words, hor_count, ver_count, dictionary);
         if (draw_mode) draw_crossword(crossword, crossword_size);

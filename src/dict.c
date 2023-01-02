@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "library.h"
+#include "extrafuns.h"
 
 extern int errno;
 
@@ -118,7 +118,7 @@ Word_finder find_word(Dictnode* dictionary, char* filter) {
             }
             //TODO errno and return
             ret->word = word;
-            ret->next = node->next;
+            ret->node = node;
             return ret;
         }
         node = node->next;
@@ -142,7 +142,7 @@ Word_finder find_word_with_node(Dictnode node, char* filter) {
             }
             //TODO errno and return
             ret->word = word;
-            ret->next = node->next;
+            ret->node = node;
             return ret;
         }
         node = node->next;
