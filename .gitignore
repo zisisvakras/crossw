@@ -1,6 +1,7 @@
 # Ignore mine
 out
 hashthings.c
+crossw
 
 # Prerequisites
 *.d
