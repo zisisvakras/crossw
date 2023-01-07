@@ -33,7 +33,6 @@ void pop_word(Actionnode* actions, int** map, char** changed, Wordnode* word);
 Bitmaps make_maps(Dictnode* dictionary, int max_word_size, int* words_count, int** map_sizes);
 int* create_map(Bitmaps maps, int* map_sizes, char* filter);
 void join_map(int* map1, int* map2, int map_size);
-int* copy_map(int* map, int map_size);
 void print_map(int* map, int map_size);
 int sum_bit(int* map, int map_size);
 
