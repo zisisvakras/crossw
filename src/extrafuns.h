@@ -15,6 +15,7 @@ void print_dict(Dictnode* dictionary, int max_word_size, int* words_count);
 void free_dict(Dictnode* dictionary, int max_word_size);
 char* find_word(Dictnode subdict, int* map, int map_size);
 int word_val(char* word);
+void sort_dict(Dictnode subdict, int first, int last);
 
 /* words.c functions */
 void write_word(char** crossword, Word node, char* word);
@@ -22,7 +23,6 @@ void delete_word(char** crossword, Word node, char* word);
 Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count);
 void print_words(Wordnode words, int wordnode_count);
 char* word_written(char* word, char* filter);
-void sort_words(Wordnode* words, int first, int last);
 void prop_word(Wordnode words, int last, char** crossword, Bitmaps maps, int* map_sizes);
 
 /* action.c functions */

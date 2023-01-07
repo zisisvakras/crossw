@@ -156,8 +156,6 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
         ver_size = 0;
         ver_score = 0;
     }
-    sort_words(&words[0], 0, hor_count - 1);
-    sort_words(&words[1], 0, ver_count - 1);
     Wordnode words_cj = malloc((hor_count + ver_count) * sizeof(Word));
     *wordnode_count = hor_count + ver_count;
     while (hor_count || ver_count) {
@@ -171,30 +169,6 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
         }
     }
     return words_cj;
-}
-
-void sort_words(Wordnode* words, int first, int last) {
-    int i, j, pivot;
-    Word temp;
-    if (first < last) {
-        pivot = first;
-        i = first;
-        j = last;
-        while (i < j) {
-            while ((*words)[i].score <= (*words)[pivot].score && i < last) i++;
-            while ((*words)[j].score > (*words)[pivot].score) j--;
-            if (i < j) {
-                temp = (*words)[i];
-                (*words)[i] = (*words)[j];
-                (*words)[j] = temp;
-            }
-        }
-        temp = (*words)[pivot];
-        (*words)[pivot] = (*words)[j];
-        (*words)[j] = temp;
-        sort_words(words, first, j - 1);
-        sort_words(words, j + 1 , last);
-    }
 }
 
 void prop_word(Wordnode words, int last, char** crossword, Bitmaps maps, int* map_sizes) {

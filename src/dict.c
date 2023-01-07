@@ -44,6 +44,9 @@ Dictnode* make_dict(char* dictionary_path, int max_word_size, int** words_count)
 
         words_count_new[word_size - 1]++;
     }
+    for (int i = 0 ; i < max_word_size ; ++i) {
+        sort_dict(dictionary[i], 0, words_count_new[i] - 1);
+    }
     fclose(dictionary_file);
     free(buffer);
     return dictionary;
@@ -114,4 +117,28 @@ int word_val(char* word) {
         }
     }
     return value;
+}
+
+void sort_dict(Dictnode subdict, int first, int last) {
+    int i, j, pivot;
+    Dictionary temp;
+    if (first < last) {
+        pivot = first;
+        i = first;
+        j = last;
+        while (i < j) {
+            while (subdict[i].value >= subdict[pivot].value && i < last) i++;
+            while (subdict[j].value < subdict[pivot].value) j--;
+            if (i < j) {
+                temp = subdict[i];
+                subdict[i] = subdict[j];
+                subdict[j] = temp;
+            }
+        }
+        temp = subdict[pivot];
+        subdict[pivot] = subdict[j];
+        subdict[j] = temp;
+        sort_dict(subdict, first, j - 1);
+        sort_dict(subdict, j + 1 , last);
+    }
 }
