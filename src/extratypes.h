@@ -1,40 +1,35 @@
-typedef struct Wordstruct* Wordnode;
-typedef struct Wordstruct Word;
-typedef struct Actionstuct* Actionnode;
-typedef struct Actionstuct Action;
+#ifndef EXTRATYPES_H_
+#define EXTRATYPES_H_
+
+typedef struct Word* Wordnode;
+typedef struct Word Word;
+typedef struct Action* Actionnode;
+typedef struct Action Action;
 typedef struct Dictionary* Dictnode;
-typedef struct Word_finderstruct* Word_finder;
+typedef struct Dictionary Dictionary;
+typedef int**** Bitmaps;
 
 struct Dictionary {
+    int value;
     char* word;
-    Dictnode next;
 };
 
-struct Word_finderstruct {
-    char* word;
-    Dictnode node;
-};
-
-struct Wordstruct {
+struct Word {
     int orientation;
+    int score;
     int constant;
     int begin;
     int end;
 };
 
-struct Actionstuct {
+// Stack 101
+struct Action {
     Wordnode wordnode;
-    Dictnode dictnode;
+    int* map;
     char* changed;
-    Actionnode next;
     Actionnode prev;
 };
 
-
-typedef struct smthtochange* In_Use;
-//TODO find name for this
-struct smthtochange {
-    In_Use next;
-    Dictnode node;
-};
 //TODO find better names maybe
+
+#endif

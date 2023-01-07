@@ -2,150 +2,116 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "extratypes.h"
 #include "extrafuns.h"
 
 extern int errno;
 
-Dictnode* make_dict(char* dictionary_path, int max_word_size) {
+//TODO potential fseek to get back to the top of file
+
+Dictnode* make_dict(char* dictionary_path, int max_word_size, int** words_count) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
-
-    if (dictionary_file == NULL) { /* File error handling */
-        fprintf(stderr, "Error while handling dictionary: %s", strerror(errno));
-        return NULL;
+    int* words_count_l = calloc(max_word_size, sizeof(int));
+    char* buffer = malloc(81 * sizeof(char));
+    while (fscanf(dictionary_file, "%80s", buffer) == 1) {
+        int word_size = strlen(buffer);
+        if (word_size > max_word_size) continue;
+        words_count_l[word_size - 1]++;
     }
-    //TODO errno and return
+    fclose(dictionary_file);
+    *words_count = words_count_l;
+
+    dictionary_file = fopen(dictionary_path, "r");
 
     /* Allocate enough linked lists for all needed word sizes */
     Dictnode* dictionary = malloc(max_word_size * sizeof(Dictnode));
-    if (dictionary == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
-    //TODO errno and return
+
     for (int i = 0 ; i < max_word_size ; i++) {
-        dictionary[i] = malloc(sizeof(struct Dictionary));
-        if (dictionary[i] == NULL) { /* Malloc error handling */
-            fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-            return NULL;
-        }
-        //TODO errno and return
+        dictionary[i] = malloc(words_count_l[i] * sizeof(Dictionary));
     }
 
-    /* Array to hold pointers at the end of the list */
-    Dictnode* dictionary_end = malloc(max_word_size * sizeof(Dictnode));
-    if (dictionary_end == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
-    for (int i = 0 ; i < max_word_size ; i++) {
-        dictionary_end[i] = dictionary[i];
-    }
-
-    char* buffer = malloc(81 * sizeof(char)); /* Hopefully no word will be larger than 80 chars long */
-    if (buffer == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
-    //TODO errno and return
+    int* words_count_new = calloc(max_word_size, sizeof(int));
     while (fscanf(dictionary_file, "%80s", buffer) == 1) { /* Scan 1 word at a time */
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue; /* No need to allocate larger words than needed */
-        Dictnode node = dictionary_end[word_size - 1]; /* Copy current node */
-        node->word = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
-        if (node->word == NULL) { /* Malloc error handling */
-            fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-            return NULL;
-        }
-        //TODO errno and return
-        strcpy(node->word, buffer); /* Copy word in buffer to node */
-        node->next = malloc(sizeof(struct Dictionary)); /* Allocate next node */
-        if (node->next == NULL) { /* Malloc error handling */
-            fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-            return NULL;
-        }
-        //TODO errno and return
-        dictionary_end[word_size - 1] = node->next; /* Change end node to the next one */
-    }
+        int word_value = word_val(buffer);
+        int index = words_count_new[word_size - 1];
+        dictionary[word_size - 1][index].word = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
 
-    for (int i = 0 ; i < max_word_size ; i++) {
-        dictionary_end[i]->word = NULL;
-        dictionary_end[i]->next = NULL;
-    }
+        strcpy(dictionary[word_size - 1][index].word, buffer); /* Copy word in buffer to node */
+        dictionary[word_size - 1][index].value = word_value;
 
+        words_count_new[word_size - 1]++;
+    }
     fclose(dictionary_file);
-    free(dictionary_end); /* Free excess memory */
     free(buffer);
     return dictionary;
 }
 
-void print_dict(Dictnode* dictionary, int max_word_size) {
-    for (int i = 0 ; i < max_word_size ; i++) {
+void print_dict(Dictnode* dictionary, int max_word_size, int* words_count) {
+    for (int i = 0 ; i < max_word_size ; ++i) {
         printf("words with size: %d\n\n", i + 1);
-        Dictnode temp = dictionary[i];
-        do {
-            if (temp->word != NULL)
-                printf("%s\n", temp->word);
-        } while ((temp = temp->next) != NULL);
+        for (int j = 0 ; j < words_count[i] ; ++j) {
+            printf("%s\n", dictionary[i][j].word);
+        }
     }
 }
 
 void free_dict(Dictnode* dictionary, int max_word_size) {
     for (int i = 0 ; i < max_word_size ; i++) {
-        Dictnode temp;
-        while (dictionary[i] != NULL) {
-            temp = dictionary[i];
-            dictionary[i] = dictionary[i]->next;
-            free(temp);
-        }
+        free(dictionary[i]);
     }
+    free(dictionary);
 }
 
-Word_finder find_word(Dictnode* dictionary, char* filter) {
-    int i, word_size = strlen(filter);
-    Dictnode node = dictionary[word_size - 1];
+char* find_word(Dictnode subdict, int* map, int map_size) {
+    if (!map) return NULL;
     char* word;
-    while ((word = node->word) != NULL) {
-        for (i = 0 ; i < word_size ; i++) {
-            if (filter[i] == '?') continue;
-            if (word[i] != filter[i]) break;
-        }
-        if (i == word_size) {
-            Word_finder ret = malloc(sizeof(struct Word_finderstruct));
-            if (ret == NULL) { /* Malloc error handling */
-                fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-                return NULL;
+    for (int i = 0 ; i < map_size ; ++i) {
+        if (map[i] == 0) continue;
+        for (int j = 0 ; j < 32 ; j++) {
+            if ((map[i] >> j) & 1) {
+                map[i] ^= 1 << j;
+                return subdict[i * 32 + j].word;
             }
-            //TODO errno and return
-            ret->word = word;
-            ret->node = node;
-            return ret;
         }
-        node = node->next;
     }
     return NULL;
 }
 
-Word_finder find_word_with_node(Dictnode node, char* filter) {
-    int i, word_size = strlen(filter);
-    char* word;
-    while ((word = node->word) != NULL) {
-        for (i = 0 ; i < word_size ; i++) {
-            if (filter[i] == '?') continue;
-            if (word[i] != filter[i]) break;
+int word_val(char* word) {
+    int len = strlen(word);
+    int value = 0;
+    for (int i = 0 ; i < len ; i++) {
+        switch (word[i]) {
+            case 'e': value += 26; break;
+            case 'a': value += 25; break;
+            case 'i': value += 24; break;
+            case 'r': value += 23; break;
+            case 't': value += 22; break;
+            case 'o': value += 21; break;
+            case 'n': value += 20; break;
+            case 's': value += 19; break;
+            case 'l': value += 18; break;
+            case 'c': value += 17; break;
+            case 'u': value += 16; break;
+            case 'm': value += 15; break;
+            case 'd': value += 14; break;
+            case 'p': value += 13; break;
+            case 'h': value += 12; break;
+            case 'g': value += 11; break;
+            case 'b': value += 10; break;
+            case 'y': value += 9; break;
+            case 'f': value += 8; break;
+            case 'w': value += 7; break;
+            case 'k': value += 6; break;
+            case 'v': value += 5; break;
+            case 'x': value += 4; break;
+            case 'z': value += 3; break;
+            case 'j': value += 2; break;
+            case 'q': value += 1; break;
         }
-        if (i == word_size) {
-            Word_finder ret = malloc(sizeof(struct Word_finderstruct));
-            if (ret == NULL) { /* Malloc error handling */
-                fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-                return NULL;
-            }
-            //TODO errno and return
-            ret->word = word;
-            ret->node = node;
-            return ret;
-        }
-        node = node->next;
     }
-    return NULL;
+    return value;
 }

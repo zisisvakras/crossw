@@ -2,7 +2,7 @@
 
 make crossw > /dev/null
 
-./crossw data/Crossword$1.txt -dict data/Words.txt
+/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword$1.txt -dict data/Words.txt
 
 make clean > /dev/null
 

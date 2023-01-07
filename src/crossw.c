@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "extratypes.h"
 #include "extrafuns.h"
 
 extern int errno;
@@ -39,25 +40,24 @@ int main(int argc, char** argv) {
         }
     }
     
-    char** crossword;
+    char** crossword = NULL;
     int max_word_size = 0, crossword_size = 0;
     if (init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size)) return errno;
+    int* words_count;
+    Dictnode* dictionary = make_dict(dictionary_path, max_word_size, &words_count);
+    int* map_sizes = NULL;
+    Bitmaps maps = make_maps(dictionary, max_word_size, words_count, &map_sizes);
 
-    Dictnode* dictionary = make_dict(dictionary_path, max_word_size);
-    if (dictionary == NULL) { /* Check dict.c for errors */
-        return errno;
-    }
-    
-    int hor_count = 0;
-    int ver_count = 0;
-    Wordnode* words = map_words(crossword, crossword_size, &hor_count, &ver_count);
+    int wordnode_count = 0;
+    Wordnode words = map_words(crossword, crossword_size, &wordnode_count);
 
-    if (check_mode) {
-        int ret_check = check_crossword(crossword, crossword_size, words, hor_count, ver_count, dictionary);
-        if (draw_mode) draw_crossword(crossword, crossword_size);
-        return ret_check;
-    }
-    solve_crossword(crossword, crossword_size, dictionary, words, hor_count, ver_count);
+    // if (check_mode) {
+    //     int ret_check = check_crossword(crossword, crossword_size, words, wordnode_count, dictionary, maps, map_sizes);
+    //     if (draw_mode) draw_crossword(crossword, crossword_size);
+    //     return ret_check;
+    // }
+    //print_dict(dictionary, max_word_size);
+    solve_crossword(crossword, crossword_size, dictionary, words, wordnode_count, maps, map_sizes);
     if (draw_mode) draw_crossword(crossword, crossword_size);
     draw_crossword(crossword, crossword_size);
     free_dict(dictionary, max_word_size);

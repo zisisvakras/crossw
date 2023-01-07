@@ -2,6 +2,7 @@
 out
 hashthings.c
 crossw
+relic.c
 
 # Prerequisites
 *.d
