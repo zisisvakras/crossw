@@ -93,12 +93,8 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                 hor_size++;
             }
             if (crossword[i][j] == '#') {
-                if (hor_size > 1) {  
-                    words[index].orientation = 0;
-                    words[index].constant = i;
-                    words[index].begin = begin_hor;
-                    words[index].end = j - 1;
-                    index++;
+                if (hor_size > 1) {
+                    words[index++] = (Word){0, i, begin_hor, j - 1};
                 }
                 hor_size = 0;
             }
@@ -110,28 +106,16 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
             }
             if (crossword[j][i] == '#') {
                 if (ver_size > 1) {
-                    words[index].orientation = 1;
-                    words[index].constant = i;
-                    words[index].begin = begin_ver;
-                    words[index].end = j - 1;
-                    index++;
+                    words[index++] = (Word){1, i, begin_ver, j - 1};
                 }
                 ver_size = 0;
             }
         }
         if (hor_size > 1) {
-            words[index].orientation = 0;
-            words[index].constant = i;
-            words[index].begin = begin_hor;
-            words[index].end = crossword_size - 1;
-            index++;
+            words[index++] = (Word){0, i, begin_hor, crossword_size - 1};
         }
         if (ver_size > 1) {
-            words[index].orientation = 1;
-            words[index].constant = i;
-            words[index].begin = begin_ver;
-            words[index].end = crossword_size - 1;
-            index++;
+            words[index++] = (Word){1, i, begin_ver, crossword_size - 1};
         }
         hor_size = 0;
         ver_size = 0;
