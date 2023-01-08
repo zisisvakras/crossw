@@ -7,8 +7,6 @@
 
 extern int errno;
 
-//TODO potential fseek to get back to the top of file
-
 Dictnode* make_dict(char* dictionary_path, int max_word_size, int** words_count) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
@@ -19,10 +17,9 @@ Dictnode* make_dict(char* dictionary_path, int max_word_size, int** words_count)
         if (word_size > max_word_size) continue;
         words_count_l[word_size - 1]++;
     }
-    fclose(dictionary_file);
     *words_count = words_count_l;
 
-    dictionary_file = fopen(dictionary_path, "r");
+    rewind(dictionary_file); /* Go back to the top of dictionary stream */
 
     /* Allocate enough linked lists for all needed word sizes */
     Dictnode* dictionary = malloc(max_word_size * sizeof(Dictnode));
