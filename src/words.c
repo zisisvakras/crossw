@@ -37,10 +37,10 @@ void delete_word(char** crossword, Word node, char* word) {
 void print_words(Wordnode words, int wordnode_count) {
     for (int i = 0 ; i < wordnode_count ; ++i) {
         if (words[i].orientation) {
-            printf("%d. col: %d begin: %d end: %d score: %d\n", i + 1, words[i].constant, words[i].begin, words[i].end, words[i].score);
+            printf("%d. col: %d begin: %d end: %d", i + 1, words[i].constant, words[i].begin, words[i].end);
         }
         else {
-            printf("%d. row: %d begin: %d end: %d score: %d\n", i + 1, words[i].constant, words[i].begin, words[i].end, words[i].score);
+            printf("%d. row: %d begin: %d end: %d", i + 1, words[i].constant, words[i].begin, words[i].end);
         }
     }
 }
@@ -56,10 +56,7 @@ char* word_written(char* word, char* filter) {
 }
 
 Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
-    int hor_size = 0;
-    int ver_size = 0;
-    int ver_count = 0;
-    int hor_count = 0;
+    int hor_size = 0, ver_size = 0, ver_count = 0, hor_count = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
             if (crossword[i][j] != '#') hor_size++;
@@ -78,97 +75,68 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
         hor_size = 0;
         ver_size = 0;
     }
-    Wordnode* words = malloc(2 * sizeof(Wordnode));
+    *wordnode_count = hor_count + ver_count;
+
+    Wordnode words = malloc((*wordnode_count) * sizeof(Word));
+
     if (words == NULL) { /* Malloc error handling */
         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
         return NULL;
     }
-    words[0] = malloc(hor_count * sizeof(Word));
-    words[1] = malloc(ver_count * sizeof(Word));
-    if (words[0] == NULL || words[1] == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
-    int begin_hor, begin_ver;
-    int hor_index = 0, ver_index = 0;
-    int hor_score = 0, ver_score = 0; //TODO word score
+    int begin_hor, begin_ver, index = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
             if (crossword[i][j] != '#') {
                 if (hor_size == 0) {
                     begin_hor = j;
                 }
-                if ((i > 0 && crossword[i - 1][j] != '#') || (i < crossword_size - 1 && crossword[i + 1][j] != '#'))
-                    hor_score++;
                 hor_size++;
             }
             if (crossword[i][j] == '#') {
                 if (hor_size > 1) {  
-                    words[0][hor_index].orientation = 0;
-                    words[0][hor_index].score = hor_score;
-                    words[0][hor_index].constant = i;
-                    words[0][hor_index].begin = begin_hor;
-                    words[0][hor_index].end = j - 1;
-                    hor_index++;
+                    words[index].orientation = 0;
+                    words[index].constant = i;
+                    words[index].begin = begin_hor;
+                    words[index].end = j - 1;
+                    index++;
                 }
-                hor_score = 0;
                 hor_size = 0;
             }
             if (crossword[j][i] != '#') {
                 if (ver_size == 0) {
                     begin_ver = j;
                 }
-                if ((i > 0 && crossword[j][i - 1] != '#') || (i < crossword_size - 1 && crossword[j][i + 1] != '#'))
-                    ver_score++;
                 ver_size++;
             }
             if (crossword[j][i] == '#') {
                 if (ver_size > 1) {
-                    words[1][ver_index].orientation = 1;
-                    words[1][ver_index].score = ver_score;
-                    words[1][ver_index].constant = i;
-                    words[1][ver_index].begin = begin_ver;
-                    words[1][ver_index].end = j - 1;
-                    ver_index++;
+                    words[index].orientation = 1;
+                    words[index].constant = i;
+                    words[index].begin = begin_ver;
+                    words[index].end = j - 1;
+                    index++;
                 }
-                ver_score = 0;
                 ver_size = 0;
             }
         }
         if (hor_size > 1) {
-            words[0][hor_index].orientation = 0;
-            words[0][hor_index].score = hor_score;
-            words[0][hor_index].constant = i;
-            words[0][hor_index].begin = begin_hor;
-            words[0][hor_index].end = crossword_size - 1;
-            hor_index++;
+            words[index].orientation = 0;
+            words[index].constant = i;
+            words[index].begin = begin_hor;
+            words[index].end = crossword_size - 1;
+            index++;
         }
         if (ver_size > 1) {
-            words[1][ver_index].orientation = 1;
-            words[1][ver_index].score = ver_score;
-            words[1][ver_index].constant = i;
-            words[1][ver_index].begin = begin_ver;
-            words[1][ver_index].end = crossword_size - 1;
-            ver_index++;
+            words[index].orientation = 1;
+            words[index].constant = i;
+            words[index].begin = begin_ver;
+            words[index].end = crossword_size - 1;
+            index++;
         }
         hor_size = 0;
-        hor_score = 0;
         ver_size = 0;
-        ver_score = 0;
     }
-    Wordnode words_cj = malloc((hor_count + ver_count) * sizeof(Word));
-    *wordnode_count = hor_count + ver_count;
-    while (hor_count || ver_count) {
-        if (hor_count) {
-            words_cj[hor_count + ver_count - 1] = words[0][hor_count - 1];
-            --hor_count;
-        }
-        if (ver_count) {
-            words_cj[hor_count + ver_count - 1] = words[1][ver_count - 1];
-            --ver_count;
-        }
-    }
-    return words_cj;
+    return words;
 }
 
 void prop_word(Wordnode words, int last, char** crossword, Bitmaps maps, int* map_sizes) {

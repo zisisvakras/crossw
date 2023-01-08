@@ -14,9 +14,10 @@ struct Dictionary {
     char* word;
 };
 
+
+//TODO add word size and make changes
 struct Word {
     int orientation;
-    int score;
     int constant;
     int begin;
     int end;
