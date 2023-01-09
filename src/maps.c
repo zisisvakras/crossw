@@ -69,7 +69,7 @@ int* create_map(Bitmaps maps, int* map_sizes, char* filter) {
     int word_size = strlen(filter);
     int map_size = map_sizes[word_size - 1];
     int* map = malloc(map_size * sizeof(int));
-    memcpy(map, maps[word_size - 1][word_size][0], map_size);
+    memcpy(map, maps[word_size - 1][word_size][0], map_size * sizeof(int));
     for (int i = 0 ; i < word_size ; ++i) {
         if (filter[i] != '?') {
             join_map(map, maps[word_size - 1][i][filter[i] - 'a'], map_size);
@@ -89,8 +89,8 @@ int sum_bit(int* map, int map_size) {
     int count = 0;
     for (int i = 0 ; i < map_size ; ++i) {
         if (map[i] == 0) continue;
-        for (int j = 0 ; j < 32 ; j++) {
-            if ((map[i] >> j) & 1) count++;
+        for (int j = 0 ; j < 32 ; ++j) {
+            if ((map[i] >> j) & 1) ++count;
         }
     }
     return count;
