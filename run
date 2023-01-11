@@ -1,8 +1,8 @@
 #!/bin/bash
 
-make crossw > /dev/null
+make > /dev/null
 
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword$1.txt -dict data/Words.txt
+/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/Words.txt
 
 make clean > /dev/null
 

@@ -67,7 +67,6 @@ void free_dict(Dictnode* dictionary, int max_word_size) {
 
 char* find_word(Dictnode subdict, int* map, int map_size) {
     if (!map) return NULL;
-    char* word;
     for (int i = 0 ; i < map_size ; ++i) {
         if (map[i] == 0) continue;
         for (int j = 0 ; j < 32 ; j++) {

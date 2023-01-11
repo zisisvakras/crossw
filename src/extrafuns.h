@@ -5,7 +5,7 @@
 /* crossutil.c functions */
 void draw_crossword(char** crossword, int crossword_size);
 char* create_filter(char** crossword, Word word);
-void solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes);
+void solve_crossword(char** crossword, Dictnode* dictionary, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes);
 int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, int ver_count, Dictnode* dictionary, Bitmaps maps, int* map_sizes);
 int init_crossword(char* crossword_path, char*** crossword, int* crossword_size, int* max_word_size);
 

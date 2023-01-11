@@ -153,7 +153,7 @@ char* create_filter(char** crossword, Word word) {
 }
 
 
-void solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes) {
+void solve_crossword(char** crossword, Dictnode* dictionary, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes) {
     Actionnode actions = NULL;
     int* map = NULL;
     prop_word(words, wordnode_count - 1, crossword, maps, map_sizes);
@@ -178,15 +178,14 @@ void solve_crossword(char** crossword, int crossword_size, Dictnode* dictionary,
             map = old_map;
             free(changed);
             free(filter);
+            continue;
         }
-        else {
-            char* changed = word_written(word_found, filter);
-            push_word(&actions, map, changed, &words[wordnode_count - 1]);
-            write_word(crossword, words[wordnode_count - 1], word_found);
-            map = NULL;
-            wordnode_count--;
-            prop_word(words, wordnode_count - 1, crossword, maps, map_sizes);
-            free(filter);
-        }
+        char* changed = word_written(word_found, filter);
+        push_word(&actions, map, changed, &words[wordnode_count - 1]);
+        write_word(crossword, words[wordnode_count - 1], word_found);
+        map = NULL;
+        wordnode_count--;
+        if (wordnode_count) prop_word(words, wordnode_count - 1, crossword, maps, map_sizes);
+        free(filter);
     }
 }

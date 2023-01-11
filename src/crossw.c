@@ -51,13 +51,13 @@ int main(int argc, char** argv) {
     int wordnode_count = 0;
     Wordnode words = map_words(crossword, crossword_size, &wordnode_count);
 
-    // if (check_mode) {
+    if (check_mode) {
     //     int ret_check = check_crossword(crossword, crossword_size, words, wordnode_count, dictionary, maps, map_sizes);
     //     if (draw_mode) draw_crossword(crossword, crossword_size);
     //     return ret_check;
-    // }
+    }
     //print_dict(dictionary, max_word_size);
-    solve_crossword(crossword, crossword_size, dictionary, words, wordnode_count, maps, map_sizes);
+    solve_crossword(crossword, dictionary, words, wordnode_count, maps, map_sizes);
     if (draw_mode) draw_crossword(crossword, crossword_size);
     draw_crossword(crossword, crossword_size);
     free_dict(dictionary, max_word_size);

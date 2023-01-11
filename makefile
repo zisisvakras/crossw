@@ -1,26 +1,30 @@
+TARGET_EXEC := crossw
+
+BUILD_DIR := ./target
+SRC_DIRS := ./src
+
+SRCS := $(shell find $(SRC_DIRS) -name '*.c' -or -name '*.s')
+
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+
+DEPS := $(OBJS:.o=.d)
+
+INC_DIRS := $(shell find $(SRC_DIRS) -type d)
+
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
 CC = gcc
-CFLAGS = -g3#-Wall -Werror -Wextra
+CFLAGS = $(INC_FLAGS) -g3 -Wall -Werror -Wextra
 
-crossw: crossw.o crossutil.o dict.o actions.o words.o maps.o
-	$(CC) $(CFLAGS) crossw.o crossutil.o maps.o words.o actions.o dict.o -o crossw
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $@
 
-crossw.o: src/crossw.c
-	$(CC) $(CFLAGS) -c src/crossw.c
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-actions.o: src/actions.c
-	$(CC) $(CFLAGS) -c src/actions.c
-
-crossutil.o: src/crossutil.c
-	$(CC) $(CFLAGS) -c src/crossutil.c
-
-dict.o: src/dict.c
-	$(CC) $(CFLAGS) -c src/dict.c
-
-words.o: src/words.c
-	$(CC) $(CFLAGS) -c src/words.c
-
-maps.o: src/maps.c
-	$(CC) $(CFLAGS) -c src/maps.c
-
+.PHONY: clean
 clean:
-	rm -f *.o crossw
+	rm -r $(BUILD_DIR)
+
+-include $(DEPS)
