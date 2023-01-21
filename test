@@ -1,27 +1,27 @@
 #!/bin/bash
 
-make crossw > /dev/null
+make > /dev/null
 
 echo "Words"
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword1.txt -dict data/Words.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword2.txt -dict data/Words.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword3.txt -dict data/Words.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword4.txt -dict data/Words.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty6.txt -dict data/Words.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty7.txt -dict data/Words.txt
-echo "More Words"
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword1.txt -dict data/MoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword2.txt -dict data/MoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword3.txt -dict data/MoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword4.txt -dict data/MoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty6.txt -dict data/MoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty7.txt -dict data/MoreWords.txt
-echo "Even More Words"
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword1.txt -dict data/EvenMoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword2.txt -dict data/EvenMoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword3.txt -dict data/EvenMoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword4.txt -dict data/EvenMoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty6.txt -dict data/EvenMoreWords.txt
-/usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty7.txt -dict data/EvenMoreWords.txt
+/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword1.txt -dict data/Words.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword2.txt -dict data/Words.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword3.txt -dict data/Words.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword4.txt -dict data/Words.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty6.txt -dict data/Words.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty7.txt -dict data/Words.txt
+# echo "More Words"
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword1.txt -dict data/MoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword2.txt -dict data/MoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword3.txt -dict data/MoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword4.txt -dict data/MoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty6.txt -dict data/MoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty7.txt -dict data/MoreWords.txt
+# echo "Even More Words"
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword1.txt -dict data/EvenMoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword2.txt -dict data/EvenMoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword3.txt -dict data/EvenMoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Crossword4.txt -dict data/EvenMoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty6.txt -dict data/EvenMoreWords.txt
+# /usr/bin/time -f "%E %Uu %Ss %P" ./crossw data/Empty7.txt -dict data/EvenMoreWords.txt
 
 make clean > /dev/null
