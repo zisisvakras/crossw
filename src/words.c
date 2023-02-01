@@ -95,6 +95,12 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
             if (crossword[i][j] == '#') {
                 if (hor_size > 1) {
                     words[index++] = (Word){0, i, begin_hor, j - 1};
+                    // words[index++] = (Word){
+                    //     .orientation = 0,
+                    //     .constant = i,
+                    //     .begin = begin_hor,
+                    //     .end = j - 1
+                    // };
                 }
                 hor_size = 0;
             }

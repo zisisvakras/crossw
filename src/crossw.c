@@ -7,42 +7,41 @@
 
 extern int errno;
 
-//TODO better alphabet for sorted double linked list by total (freq) value of letters
-//TODO make dictionary also go backwards maybe
 int main(int argc, char** argv) {
 
     //TODO better checking for invalid arguments
     if (argc < 2) { /* Argument error handling */
         fprintf(stderr, "Not enough arguments\n");
-        return -1;
+        return 1;
     }
 
     char* dictionary_path = "Words.txt";
     char* crossword_path = argv[1];
-    char* arg;
-    int check_mode = 0;
-    int draw_mode = 0;
+    int check_mode = 0, draw_mode = 0;
+
     while (--argc) {
-        if ((arg = argv[argc])) {
-            if (!strcmp(arg, "-dict")) {
+        if (argv[argc]) {
+            if (!strcmp(argv[argc], "-dict")) {
                 if(argv[argc + 1] == NULL) { /* Argument error handling */
                     fprintf(stderr, "Could not find dictionary\n");
-                    return -1;
+                    return 1;
                 }
                 dictionary_path = argv[argc + 1];
             }
-            if (!strcmp(arg, "-check")) {
+            if (!strcmp(argv[argc], "-check")) {
                 check_mode = 1;
             }
-            if (!strcmp(arg, "-draw")) {
+            if (!strcmp(argv[argc], "-draw")) {
                 draw_mode = 1;
             }
         }
     }
     
+    /* Intialize the crossword part */
     char** crossword = NULL;
-    int max_word_size = 0, crossword_size = 0;
-    if (init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size)) return errno;
+    int max_word_size, crossword_size;
+    init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
+
     int* words_count;
     Dictnode* dictionary = make_dict(dictionary_path, max_word_size, &words_count);
     int* map_sizes = NULL;

@@ -2,12 +2,18 @@
 #define EXTRAFUNS_H_
 #include "extratypes.h"
 
+/* Generic error thrower with errno */
+#define error(x, e) ({ \
+    perror((x));       \
+    exit((e));         \
+})
+
 /* crossutil.c functions */
 void draw_crossword(char** crossword, int crossword_size);
 char* create_filter(char** crossword, Word word);
 void solve_crossword(char** crossword, Dictnode* dictionary, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes);
 int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, int ver_count, Dictnode* dictionary, Bitmaps maps, int* map_sizes);
-int init_crossword(char* crossword_path, char*** crossword, int* crossword_size, int* max_word_size);
+void init_crossword(char* crossword_path, char*** crossword, int* crossword_size, int* max_word_size);
 
 /* dict.c functions */
 Dictnode* make_dict(char* dictionary_path, int max_word_size, int** words_count);

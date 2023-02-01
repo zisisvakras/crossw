@@ -7,62 +7,58 @@
 
 extern int errno;
 
-int init_crossword(char* crossword_path, char*** crossword, int* crossword_size, int* max_word_size) {
-    FILE* crossword_file = fopen(crossword_path, "r");
-    if (crossword_file == NULL) { /* File error handling */
-        fprintf(stderr, "Error while handling crossword: %s", strerror(errno));
-        return errno;
-    }
-    //TODO errno and return
-    if (fscanf(crossword_file, "%d", crossword_size) != 1) {
-        fprintf(stderr, "Error while reading size of crossword"); /* If scan didn't read 1 integer throw error */
-        return errno;
-    }
+void init_crossword(char* crossword_path, char*** crossword, int* crossword_size, int* max_word_size) {
     
-    //TODO check null pointer
+    FILE* crossword_file = fopen(crossword_path, "r");
+
+    if (crossword_file == NULL) /* File error handling */
+        error("Error while handling crossword", errno);
+
+    if (fscanf(crossword_file, "%d", crossword_size) != 1) /* Check failed size scan */
+        error("Error while reading size of crossword", errno);
+    
     (*crossword) = malloc((*crossword_size) * sizeof(char*));
-    if (*crossword == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return 1;
-    }
+    if ((*crossword) == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
 
-    for (int i = 0 ; i < (*crossword_size) ; i++) {
+    for (int i = 0 ; i < (*crossword_size) ; ++i) {
         (*crossword)[i] = malloc((*crossword_size) * sizeof(char));
-        if ((*crossword)[i] == NULL) { /* Malloc error handling */
-            fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-            return errno;
-        }
+        if ((*crossword)[i] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
 
-        for (int j = 0 ; j < (*crossword_size) ; j++) {
-            (*crossword)[i][j] = '-';
-        }
+        memset((*crossword)[i], '-', (*crossword_size) * sizeof(char));
     }
 
+    /* Reading the black tiles */
     int x, y;
-    while (fscanf(crossword_file, "%d %d", &x, &y) == 2) { /* While it continues to read black tiles */
+    while (fscanf(crossword_file, "%d %d", &x, &y) == 2) {
         (*crossword)[x - 1][y - 1] = '#';
     }
+
     /* Biggest word finder */
+    int max = 0;
     for (int i = 0 ; i < (*crossword_size) ; i++) {
-        int len_row = 0;
-        int len_col = 0;
+        int len_row = 0, len_col = 0;
         for (int j = 0 ; j < (*crossword_size) ; j++) {
+            /* Row section */
             if ((*crossword)[i][j] == '#') {
-                if (len_row > (*max_word_size)) (*max_word_size) = len_row;
+                if (len_row > max) max = len_row;
                 len_row = 0;
             }
             if ((*crossword)[i][j] == '-') len_row++;
+            /* Column section */
             if ((*crossword)[j][i] == '#') {
-                if (len_col > (*max_word_size)) (*max_word_size) = len_col;
+                if (len_col > max) max = len_col;
                 len_col = 0;
             }
             if ((*crossword)[j][i] == '-') len_col++;
         }
-        if (len_row > (*max_word_size)) (*max_word_size) = len_row;
-        if (len_col > (*max_word_size)) (*max_word_size) = len_col;
+        if (len_row > max) max = len_row;
+        if (len_col > max) max = len_col;
     }
+    *max_word_size = max;
+
     fclose(crossword_file);
-    return 0;
 }
 
 void draw_crossword(char** crossword, int crossword_size) {
