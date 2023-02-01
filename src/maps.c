@@ -1,28 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "extratypes.h"
 #include "extrafuns.h"
 
-Bitmaps make_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes) {
+extern int errno;
+
+Bitmaps make_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes_ret) {
+
     Bitmaps maps = malloc(max_word_size * sizeof(int***));
+    if (maps == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
+
     for (int i = 0 ; i < max_word_size ; ++i) {
-        maps[i] = malloc((i + 2) * sizeof(int**));
+
+        maps[i] = malloc((i + 2) * sizeof(int**)); /* +2 because i is word_size - 1 */
+        if (maps[i] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
+
         for (int j = 0 ; j <= i ; ++j) {
             maps[i][j] = malloc(26 * sizeof(int*));
+            if (maps[i][j] == NULL) /* Malloc error handling */
+                error("Error while allocating memory", errno);
         }
+
         maps[i][i + 1] = malloc(sizeof(int*));
+        if (maps[i][i + 1] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
     }
     
-    int* map_sizes_l = calloc(max_word_size, sizeof(int));
-    for (int word_size = 0 ; word_size < max_word_size ; ++word_size) {
-        for (int position = 0 ; position <= word_size ; ++position) {
+    /* Keeping track of map sizes */
+    int* map_sizes = calloc(max_word_size, sizeof(int));
+    if (map_sizes == NULL) /* Calloc error handling */
+        error("Error while allocating memory", errno);
+
+    for (int word_size = 1 ; word_size < max_word_size ; ++word_size) { /* Starts from one because word length starts from 2 */
+        for (int position = 0 ; position <= word_size ; ++position) { /* <= because word_size is -1 from actual length */
             for (int letter = 0 ; letter < 26 ; ++letter) {
 
                 /* Allocate memory */
-                map_sizes_l[word_size] = words_count[word_size] / 32;
-                if (words_count[word_size] % 32) map_sizes_l[word_size]++;
-                maps[word_size][position][letter] = calloc(map_sizes_l[word_size], sizeof(int));
+                map_sizes[word_size] = words_count[word_size] >> 5;
+                if (words_count[word_size] & 0x1F) map_sizes[word_size]++;
+                maps[word_size][position][letter] = calloc(map_sizes[word_size], sizeof(int));
+                if (maps[word_size][position][letter] == NULL) /* Calloc error handling */
+                    error("Error while allocating memory", errno);
 
                 /* Throw 1 to all found letters */
                 for (int i = 0 ; i < words_count[word_size] ; ++i) {
@@ -33,22 +55,28 @@ Bitmaps make_maps(Dictionary* bigdict, int max_word_size, int* words_count, int*
             }
         }
     }
-    for (int word_size = 0 ; word_size < max_word_size ; ++word_size) {
-        *maps[word_size][word_size + 1] = malloc(map_sizes_l[word_size] * sizeof(int));
-        for (int i = 0 ; i < map_sizes_l[word_size] ; ++i) {
-            (*maps[word_size][word_size + 1])[i] |= 0xFFFFFFFF;
-        }
-        if (words_count[word_size] % 32) {
-            for (int i = words_count[word_size] % 32 ; i < 32 ; ++i) {  
-                (*maps[word_size][word_size + 1])[map_sizes_l[word_size] - 1] ^= 1 << i;
+    for (int word_size = 1 ; word_size < max_word_size ; ++word_size) {
+
+        *maps[word_size][word_size + 1] = malloc(map_sizes[word_size] * sizeof(int));
+        if (maps[word_size][word_size + 1] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
+
+        memset(*maps[word_size][word_size + 1], 0xFF, map_sizes[word_size] * sizeof(int));
+
+        if (words_count[word_size] & 0x1F) {
+            for (int i = words_count[word_size] & 0x1F ; i < 32 ; ++i) {  
+                (*maps[word_size][word_size + 1])[map_sizes[word_size] - 1] ^= 1 << i;
             }
         }
     }
 
-    *map_sizes = map_sizes_l;
+    *map_sizes_ret = map_sizes;
     return maps;
 }
 
+/**
+ * @details debug tool
+*/
 void print_map(int* map, int map_size) {
     putchar('\n');
     for (int i = 0 ; i < map_size ; i+=8) {
@@ -79,18 +107,20 @@ int* create_map(Bitmaps maps, int* map_sizes, char* filter) {
 }
 
 void join_map(int* map1, int* map2, int map_size) {
-    for (int i = 0 ; i < map_size ; ++i) {
+    for (int i = 0 ; i < map_size ; ++i)
         map1[i] &= map2[i];
-    }
 }
 
+/* Brian Kernighan’s Algorithm */
 int sum_bit(int* map, int map_size) {
     if(map == NULL) return 0;
     int count = 0;
     for (int i = 0 ; i < map_size ; ++i) {
-        if (map[i] == 0) continue;
-        for (int j = 0 ; j < 32 ; ++j) {
-            if ((map[i] >> j) & 1) ++count;
+        int n = map[i];
+        if (n == 0) continue;
+        while (n) {
+            n &= (n - 1);
+            ++count;
         }
     }
     return count;

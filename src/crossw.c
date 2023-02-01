@@ -42,9 +42,11 @@ int main(int argc, char** argv) {
     int max_word_size, crossword_size;
     init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
 
+    /* Initialize dictionaries */
     int* words_count = NULL;
     Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &words_count);
 
+    /* Initialize maps */
     int* map_sizes = NULL;
     Bitmaps maps = make_maps(bigdict, max_word_size, words_count, &map_sizes);
 
@@ -54,7 +56,7 @@ int main(int argc, char** argv) {
     if (check_mode) {
     //     int ret_check = check_crossword(crossword, crossword_size, words, wordnode_count, bigdict, maps, map_sizes);
     //     if (draw_mode) draw_crossword(crossword, crossword_size);
-    //     return ret_check;
+        return 0;
     }
     //print_dict(bigdict, max_word_size);
     solve_crossword(crossword, bigdict, words, wordnode_count, maps, map_sizes);

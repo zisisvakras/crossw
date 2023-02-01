@@ -58,6 +58,8 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** word
         if (word_size > max_word_size) continue; /* No need to allocate larger words than needed */
         int index = index_array[word_size - 1];
         bigdict[word_size - 1][index] = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
+        if (bigdict[word_size - 1][index] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
 
         strcpy(bigdict[word_size - 1][index], buffer); /* Copy word in buffer to node */
         dictnode_values[word_size - 1][index] = word_val(buffer);
