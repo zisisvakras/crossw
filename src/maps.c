@@ -4,7 +4,7 @@
 #include "extratypes.h"
 #include "extrafuns.h"
 
-Bitmaps make_maps(Dictnode* dictionary, int max_word_size, int* words_count, int** map_sizes) {
+Bitmaps make_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes) {
     Bitmaps maps = malloc(max_word_size * sizeof(int***));
     for (int i = 0 ; i < max_word_size ; ++i) {
         maps[i] = malloc((i + 2) * sizeof(int**));
@@ -26,7 +26,7 @@ Bitmaps make_maps(Dictnode* dictionary, int max_word_size, int* words_count, int
 
                 /* Throw 1 to all found letters */
                 for (int i = 0 ; i < words_count[word_size] ; ++i) {
-                    if (dictionary[word_size][i].word[position] == 'a' + letter) {
+                    if (bigdict[word_size][i][position] == 'a' + letter) {
                         maps[word_size][position][letter][i >> 5] |= 1 << (i & 0x1F);
                     }
                 }

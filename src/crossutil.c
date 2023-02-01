@@ -149,17 +149,17 @@ char* create_filter(char** crossword, Word word) {
 }
 
 
-void solve_crossword(char** crossword, Dictnode* dictionary, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes) {
+void solve_crossword(char** crossword, Dictionary* bigdict, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes) {
     Actionnode actions = NULL;
     int* map = NULL;
     prop_word(words, wordnode_count - 1, crossword, maps, map_sizes);
     while (wordnode_count) {
-        /* Find word in dictionary */
+        /* Find word in bigdict */
         char* filter = create_filter(crossword, words[wordnode_count - 1]); //TODO optimize filter
         int word_size = strlen(filter);
         if (!map) map = create_map(maps, map_sizes, filter);
         char* word_found;
-        if ((word_found = find_word(dictionary[word_size - 1], map, map_sizes[word_size - 1])) == NULL) {
+        if ((word_found = find_word(bigdict[word_size - 1], map, map_sizes[word_size - 1])) == NULL) {
             int* old_map = NULL;
             char* changed = NULL;
             Wordnode wordnode = NULL;

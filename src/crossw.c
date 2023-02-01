@@ -36,30 +36,31 @@ int main(int argc, char** argv) {
             }
         }
     }
-    
+
     /* Intialize the crossword part */
     char** crossword = NULL;
     int max_word_size, crossword_size;
     init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
 
-    int* words_count;
-    Dictnode* dictionary = make_dict(dictionary_path, max_word_size, &words_count);
+    int* words_count = NULL;
+    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &words_count);
+
     int* map_sizes = NULL;
-    Bitmaps maps = make_maps(dictionary, max_word_size, words_count, &map_sizes);
+    Bitmaps maps = make_maps(bigdict, max_word_size, words_count, &map_sizes);
 
     int wordnode_count = 0;
     Wordnode words = map_words(crossword, crossword_size, &wordnode_count);
 
     if (check_mode) {
-    //     int ret_check = check_crossword(crossword, crossword_size, words, wordnode_count, dictionary, maps, map_sizes);
+    //     int ret_check = check_crossword(crossword, crossword_size, words, wordnode_count, bigdict, maps, map_sizes);
     //     if (draw_mode) draw_crossword(crossword, crossword_size);
     //     return ret_check;
     }
-    //print_dict(dictionary, max_word_size);
-    solve_crossword(crossword, dictionary, words, wordnode_count, maps, map_sizes);
+    //print_dict(bigdict, max_word_size);
+    solve_crossword(crossword, bigdict, words, wordnode_count, maps, map_sizes);
     if (draw_mode) draw_crossword(crossword, crossword_size);
     draw_crossword(crossword, crossword_size);
-    free_dict(dictionary, max_word_size);
+    free_dictionary(bigdict, max_word_size, words_count);
     printf("dict: %s cross: %s max: %d\n", dictionary_path, crossword_path, max_word_size);
     return 0;
 }

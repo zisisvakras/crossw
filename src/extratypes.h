@@ -5,15 +5,8 @@ typedef struct Word* Wordnode;
 typedef struct Word Word;
 typedef struct Action* Actionnode;
 typedef struct Action Action;
-typedef struct Dictionary* Dictnode;
-typedef struct Dictionary Dictionary;
+typedef char** Dictionary;
 typedef int**** Bitmaps;
-
-struct Dictionary {
-    int value;
-    char* word;
-};
-
 
 //TODO add word size and make changes
 struct Word {

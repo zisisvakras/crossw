@@ -7,72 +7,107 @@
 
 extern int errno;
 
-Dictnode* make_dict(char* dictionary_path, int max_word_size, int** words_count) {
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** words_count_ret) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
-    int* words_count_l = calloc(max_word_size, sizeof(int));
+    if (dictionary_file == NULL) /* File error handling */
+        error("Error while handling dictionary", errno);
+
+    /* Allocating a buffer */
     char* buffer = malloc(81 * sizeof(char));
+    if (buffer == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
+    
+    /* Finding how many words (per length) dict has */
+    int* words_count = calloc(max_word_size, sizeof(int));
+    if (words_count == NULL) /* Calloc error handling */
+        error("Error while allocating memory", errno);
+
     while (fscanf(dictionary_file, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue;
-        words_count_l[word_size - 1]++;
-    }
-    *words_count = words_count_l;
-
-    rewind(dictionary_file); /* Go back to the top of dictionary stream */
-
-    /* Allocate enough linked lists for all needed word sizes */
-    Dictnode* dictionary = malloc(max_word_size * sizeof(Dictnode));
-
-    for (int i = 0 ; i < max_word_size ; i++) {
-        dictionary[i] = malloc(words_count_l[i] * sizeof(Dictionary));
+        words_count[word_size - 1]++;
     }
 
-    int* words_count_new = calloc(max_word_size, sizeof(int));
+    /* Returning words_count for future use */
+    *words_count_ret = words_count;
+
+    /* Go back to the top of dictionary stream */
+    rewind(dictionary_file);
+
+    /* Allocate enough arrays for all needed word sizes */
+    Dictionary* bigdict = malloc(max_word_size * sizeof(Dictionary));
+    int** dictnode_values = malloc(max_word_size * sizeof(int*));
+    if (bigdict == NULL || dictnode_values == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
+
+    for (int i = 0 ; i < max_word_size ; ++i) {
+        bigdict[i] = malloc(words_count[i] * sizeof(char*));
+        dictnode_values[i] = malloc(words_count[i] * sizeof(int*));
+        if (bigdict[i] == NULL || dictnode_values[i] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
+    }
+
+    /* Keeping track of all array indexes */
+    int* index_array = calloc(max_word_size, sizeof(int));
+    if (index_array == NULL) /* Calloc error handling */
+        error("Error while allocating memory", errno);
+
     while (fscanf(dictionary_file, "%80s", buffer) == 1) { /* Scan 1 word at a time */
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue; /* No need to allocate larger words than needed */
-        int word_value = word_val(buffer);
-        int index = words_count_new[word_size - 1];
-        dictionary[word_size - 1][index].word = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
+        int index = index_array[word_size - 1];
+        bigdict[word_size - 1][index] = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
 
-        strcpy(dictionary[word_size - 1][index].word, buffer); /* Copy word in buffer to node */
-        dictionary[word_size - 1][index].value = word_value;
+        strcpy(bigdict[word_size - 1][index], buffer); /* Copy word in buffer to node */
+        dictnode_values[word_size - 1][index] = word_val(buffer);
 
-        words_count_new[word_size - 1]++;
+        index_array[word_size - 1]++;
     }
     for (int i = 0 ; i < max_word_size ; ++i) {
-        sort_dict(dictionary[i], 0, words_count_new[i] - 1);
+        sort_dictionary(bigdict[i], dictnode_values[i], 0, index_array[i] - 1);
     }
+    for (int i = 0 ; i < max_word_size ; ++i) {
+        free(dictnode_values[i]);
+    }
+    free(dictnode_values);
     fclose(dictionary_file);
+    free(index_array);
     free(buffer);
-    return dictionary;
+    return bigdict;
 }
 
-void print_dict(Dictnode* dictionary, int max_word_size, int* words_count) {
+/**
+ * @details debug tool
+*/
+void print_dictionary(Dictionary* bigdict, int max_word_size, int* words_count) {
     for (int i = 0 ; i < max_word_size ; ++i) {
         printf("words with size: %d\n\n", i + 1);
         for (int j = 0 ; j < words_count[i] ; ++j) {
-            printf("%s\n", dictionary[i][j].word);
+            printf("%s\n", bigdict[i][j]);
         }
     }
 }
 
-void free_dict(Dictnode* dictionary, int max_word_size) {
+void free_dictionary(Dictionary* bigdict, int max_word_size, int* words_count) {
     for (int i = 0 ; i < max_word_size ; i++) {
-        free(dictionary[i]);
+        for (int j = 0 ; j < words_count[i] ; ++j) {
+            free(bigdict[i][j]);
+        }
+        free(bigdict[i]);
     }
-    free(dictionary);
+    free(bigdict);
 }
 
-char* find_word(Dictnode subdict, int* map, int map_size) {
-    if (!map) return NULL;
+//TODO fix 32 and make it sizeof(int) * 8
+char* find_word(Dictionary dictionary, int* map, int map_size) {
+    if (map == NULL) return NULL;
     for (int i = 0 ; i < map_size ; ++i) {
         if (map[i] == 0) continue;
-        for (int j = 0 ; j < 32 ; j++) {
+        for (int j = 0 ; j < 32 ; ++j) {
             if ((map[i] >> j) & 1) {
                 map[i] ^= 1 << j;
-                return subdict[i * 32 + j].word;
+                return dictionary[i * 32 + j];
             }
         }
     }
@@ -80,61 +115,49 @@ char* find_word(Dictnode subdict, int* map, int map_size) {
 }
 
 int word_val(char* word) {
-    int len = strlen(word);
-    int value = 0;
-    for (int i = 0 ; i < len ; i++) {
-        switch (word[i]) {
-            case 'e': value += 26; break;
-            case 'a': value += 25; break;
-            case 'i': value += 24; break;
-            case 'r': value += 23; break;
-            case 't': value += 22; break;
-            case 'o': value += 21; break;
-            case 'n': value += 20; break;
-            case 's': value += 19; break;
-            case 'l': value += 18; break;
-            case 'c': value += 17; break;
-            case 'u': value += 16; break;
-            case 'm': value += 15; break;
-            case 'd': value += 14; break;
-            case 'p': value += 13; break;
-            case 'h': value += 12; break;
-            case 'g': value += 11; break;
-            case 'b': value += 10; break;
-            case 'y': value += 9; break;
-            case 'f': value += 8; break;
-            case 'w': value += 7; break;
-            case 'k': value += 6; break;
-            case 'v': value += 5; break;
-            case 'x': value += 4; break;
-            case 'z': value += 3; break;
-            case 'j': value += 2; break;
-            case 'q': value += 1; break;
-        }
+    int value = 0, i = -1;
+    int worth['z' + 1] = {
+        ['e'] = 26, ['a'] = 25, ['i'] = 24, ['r'] = 23,
+        ['t'] = 22, ['o'] = 21, ['n'] = 20, ['s'] = 19,
+        ['l'] = 18, ['c'] = 17, ['u'] = 16, ['m'] = 15,
+        ['d'] = 14, ['p'] = 13, ['h'] = 12, ['g'] = 11,
+        ['b'] = 10, ['y'] = 9,  ['f'] = 8,  ['w'] = 7,
+        ['k'] = 6,  ['v'] = 5,  ['x'] = 4,  ['z'] = 3,
+        ['j'] = 2,  ['q'] = 1
+    };
+    while (word[++i]) {
+        value += worth[(int)word[i]];
     }
     return value;
 }
 
-void sort_dict(Dictnode subdict, int first, int last) {
+void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int last) {
     int i, j, pivot;
-    Dictionary temp;
+    char* temp;
+    int temp_v;
     if (first < last) {
         pivot = first;
         i = first;
         j = last;
         while (i < j) {
-            while (subdict[i].value >= subdict[pivot].value && i < last) i++;
-            while (subdict[j].value < subdict[pivot].value) j--;
+            while (dictnode_values[i] >= dictnode_values[pivot] && i < last) i++;
+            while (dictnode_values[j] < dictnode_values[pivot]) j--;
             if (i < j) {
-                temp = subdict[i];
-                subdict[i] = subdict[j];
-                subdict[j] = temp;
+                temp = dictionary[i];
+                dictionary[i] = dictionary[j];
+                dictionary[j] = temp;
+                temp_v = dictnode_values[i];
+                dictnode_values[i] = dictnode_values[j];
+                dictnode_values[j] = temp_v;
             }
         }
-        temp = subdict[pivot];
-        subdict[pivot] = subdict[j];
-        subdict[j] = temp;
-        sort_dict(subdict, first, j - 1);
-        sort_dict(subdict, j + 1 , last);
+        temp = dictionary[pivot];
+        dictionary[pivot] = dictionary[j];
+        dictionary[j] = temp;
+        temp_v = dictnode_values[pivot];
+        dictnode_values[pivot] = dictnode_values[j];
+        dictnode_values[j] = temp_v;
+        sort_dictionary(dictionary, dictnode_values, first, j - 1);
+        sort_dictionary(dictionary, dictnode_values, j + 1 , last);
     }
 }
