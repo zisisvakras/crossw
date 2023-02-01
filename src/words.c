@@ -34,14 +34,18 @@ void delete_word(char** crossword, Word node, char* word) {
 }
 
 //TODO change to actual values
+/**
+ * @details debug tool
+*/
 void print_words(Wordnode words, int wordnode_count) {
     for (int i = 0 ; i < wordnode_count ; ++i) {
-        if (words[i].orientation) {
-            printf("%d. col: %d begin: %d end: %d", i + 1, words[i].constant, words[i].begin, words[i].end);
-        }
-        else {
-            printf("%d. row: %d begin: %d end: %d", i + 1, words[i].constant, words[i].begin, words[i].end);
-        }
+        int c[4] = {
+            words[i].orientation,
+            words[i].constant,
+            words[i].begin,
+            words[i].end
+        };
+        printf("%d. %s: %d begin: %d end: %d", i + 1, c[0] ? "col" : "row", c[1], c[2], c[3]);
     }
 }
 
@@ -56,33 +60,31 @@ char* word_written(char* word, char* filter) {
 }
 
 Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
-    int hor_size = 0, ver_size = 0, ver_count = 0, hor_count = 0;
+    int hor_size = 0, ver_size = 0, count = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
             if (crossword[i][j] != '#') hor_size++;
             if (crossword[i][j] == '#') {
-                if (hor_size > 1) hor_count++;
+                if (hor_size > 1) count++;
                 hor_size = 0;
             }
             if (crossword[j][i] != '#') ver_size++;
             if (crossword[j][i] == '#') {
-                if (ver_size > 1) ver_count++;
+                if (ver_size > 1) count++;
                 ver_size = 0;
             }
         }
-        if (hor_size > 1) hor_count++;
-        if (ver_size > 1) ver_count++;
+        if (hor_size > 1) count++;
+        if (ver_size > 1) count++;
         hor_size = 0;
         ver_size = 0;
     }
-    *wordnode_count = hor_count + ver_count;
+    *wordnode_count = count;
 
-    Wordnode words = malloc((*wordnode_count) * sizeof(Word));
+    Wordnode words = malloc(count * sizeof(Word));
+    if (words == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
 
-    if (words == NULL) { /* Malloc error handling */
-        fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-        return NULL;
-    }
     int begin_hor, begin_ver, index = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
@@ -94,13 +96,12 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
             }
             if (crossword[i][j] == '#') {
                 if (hor_size > 1) {
-                    words[index++] = (Word){0, i, begin_hor, j - 1};
-                    // words[index++] = (Word){
-                    //     .orientation = 0,
-                    //     .constant = i,
-                    //     .begin = begin_hor,
-                    //     .end = j - 1
-                    // };
+                    words[index++] = (Word) {
+                        .orientation = 0,
+                        .constant = i,
+                        .begin = begin_hor,
+                        .end = j - 1
+                    };
                 }
                 hor_size = 0;
             }
@@ -112,16 +113,31 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
             }
             if (crossword[j][i] == '#') {
                 if (ver_size > 1) {
-                    words[index++] = (Word){1, i, begin_ver, j - 1};
+                    words[index++] = (Word) {
+                        .orientation = 1,
+                        .constant = i,
+                        .begin = begin_ver,
+                        .end = j - 1
+                    };
                 }
                 ver_size = 0;
             }
         }
         if (hor_size > 1) {
-            words[index++] = (Word){0, i, begin_hor, crossword_size - 1};
+            words[index++] = (Word) {
+                .orientation = 0,
+                .constant = i,
+                .begin = begin_hor,
+                .end = crossword_size - 1
+            };
         }
         if (ver_size > 1) {
-            words[index++] = (Word){1, i, begin_ver, crossword_size - 1};
+            words[index++] = (Word) {
+                .orientation = 1,
+                .constant = i,
+                .begin = begin_ver,
+                .end = crossword_size - 1
+            };
         }
         hor_size = 0;
         ver_size = 0;

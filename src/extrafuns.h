@@ -31,12 +31,8 @@ void print_words(Wordnode words, int wordnode_count);
 char* word_written(char* word, char* filter);
 void prop_word(Wordnode words, int last, char** crossword, Bitmaps maps, int* map_sizes);
 
-/* action.c functions */
-void push_word(Actionnode* actions, int* map, char* changed, Wordnode word);
-void pop_word(Actionnode* actions, int** map, char** changed, Wordnode* word);
-
 /* maps.c functions */
-Bitmaps make_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes);
+Bitmaps init_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes);
 int* create_map(Bitmaps maps, int* map_sizes, char* filter);
 void join_map(int* map1, int* map2, int map_size);
 void print_map(int* map, int map_size);

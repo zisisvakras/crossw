@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 
     /* Initialize maps */
     int* map_sizes = NULL;
-    Bitmaps maps = make_maps(bigdict, max_word_size, words_count, &map_sizes);
+    Bitmaps maps = init_maps(bigdict, max_word_size, words_count, &map_sizes);
 
     int wordnode_count = 0;
     Wordnode words = map_words(crossword, crossword_size, &wordnode_count);

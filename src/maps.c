@@ -7,7 +7,7 @@
 
 extern int errno;
 
-Bitmaps make_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes_ret) {
+Bitmaps init_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes_ret) {
 
     Bitmaps maps = malloc(max_word_size * sizeof(int***));
     if (maps == NULL) /* Malloc error handling */

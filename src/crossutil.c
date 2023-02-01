@@ -150,7 +150,8 @@ char* create_filter(char** crossword, Word word) {
 
 
 void solve_crossword(char** crossword, Dictionary* bigdict, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes) {
-    Actionnode actions = NULL;
+    Action* actions = malloc((wordnode_count + 1) * sizeof(Action));
+    int max = wordnode_count;
     int* map = NULL;
     prop_word(words, wordnode_count - 1, crossword, maps, map_sizes);
     while (wordnode_count) {
@@ -160,15 +161,14 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Wordnode words, int 
         if (!map) map = create_map(maps, map_sizes, filter);
         char* word_found;
         if ((word_found = find_word(bigdict[word_size - 1], map, map_sizes[word_size - 1])) == NULL) {
-            int* old_map = NULL;
-            char* changed = NULL;
-            Wordnode wordnode = NULL;
-            if (!actions) {
+            if (wordnode_count == max) {
                 fprintf(stderr, "what happend\n");
                 exit(1);
             }
-            pop_word(&actions, &old_map, &changed, &wordnode);
             wordnode_count++;
+            int* old_map = actions[wordnode_count].map;
+            char* changed = actions[wordnode_count].changed;
+            Wordnode wordnode = actions[wordnode_count].wordnode;
             delete_word(crossword, *wordnode, changed);
             free(map);
             map = old_map;
@@ -177,7 +177,9 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Wordnode words, int 
             continue;
         }
         char* changed = word_written(word_found, filter);
-        push_word(&actions, map, changed, &words[wordnode_count - 1]);
+        actions[wordnode_count].map = map;
+        actions[wordnode_count].changed = changed;
+        actions[wordnode_count].wordnode = &words[wordnode_count - 1];
         write_word(crossword, words[wordnode_count - 1], word_found);
         map = NULL;
         wordnode_count--;

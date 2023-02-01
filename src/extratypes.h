@@ -3,7 +3,6 @@
 
 typedef struct Word* Wordnode;
 typedef struct Word Word;
-typedef struct Action* Actionnode;
 typedef struct Action Action;
 typedef char** Dictionary;
 typedef int**** Bitmaps;
@@ -21,7 +20,6 @@ struct Action {
     Wordnode wordnode;
     int* map;
     char* changed;
-    Actionnode prev;
 };
 
 //TODO find better names maybe
