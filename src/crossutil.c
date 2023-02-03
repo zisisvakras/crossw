@@ -149,16 +149,18 @@ char* create_filter(char** crossword, Word word) {
 }
 
 
-void solve_crossword(char** crossword, Dictionary* bigdict, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes) {
-    Action* actions = malloc((wordnode_count + 1) * sizeof(Action));
+//TODO try writeall instead of cpy
+//TODO malloc checks, wordnode_count -> index
+void solve_crossword(char*** crossword, Dictionary* bigdict, Wordnode words, int wordnode_count, Bitmaps maps, int* map_sizes) {
+    Action* actions = init_actions();
     int max = wordnode_count;
     int* map = NULL;
     prop_word(words, wordnode_count - 1, crossword, maps, map_sizes);
     while (wordnode_count) {
         /* Find word in bigdict */
-        char* filter = create_filter(crossword, words[wordnode_count - 1]); //TODO optimize filter
-        int word_size = strlen(filter);
-        if (!map) map = create_map(maps, map_sizes, filter);
+        Word word =  words[wordnode_count - 1]; //TODO optimize filter
+        int word_size = word.end - word.begin + 1;
+        map = actions[wordnode_count].map[wordnode_count - 1];
         char* word_found;
         if ((word_found = find_word(bigdict[word_size - 1], map, map_sizes[word_size - 1])) == NULL) {
             if (wordnode_count == max) {
@@ -176,14 +178,38 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Wordnode words, int 
             free(filter);
             continue;
         }
-        char* changed = word_written(word_found, filter);
-        actions[wordnode_count].map = map;
-        actions[wordnode_count].changed = changed;
-        actions[wordnode_count].wordnode = &words[wordnode_count - 1];
-        write_word(crossword, words[wordnode_count - 1], word_found);
-        map = NULL;
         wordnode_count--;
+        actioncpy(actions[wordnode_count], actions[wordnode_count + 1]);
+        write_word(actions[wordnode_count].crossword, words[wordnode_count - 1], word_found);
+        //MAP UPDATES
         if (wordnode_count) prop_word(words, wordnode_count - 1, crossword, maps, map_sizes);
-        free(filter);
     }
+    *crossword = actions[1].crossword;
+}
+
+//TODO make actions wordnode_count not +1
+//TODO malloc checks
+Action* init_actions(char** crossword, int crossword_size, Dictionary* bigdict, Wordnode words, 
+                     int wordnode_count, Bitmaps maps, int* map_sizes) 
+{
+    Action* actions = malloc((wordnode_count + 1) * sizeof(Action));
+    for (int i = 0 ; i <= wordnode_count ; ++i) {
+        actions[i].map = malloc((wordnode_count) * sizeof(int*));
+        for (int j = 0 ; j < wordnode_count ; ++j) {
+            int word_size = words[j].end - words[j].begin + 1;
+            int map_size = map_sizes[word_size - 1];
+            actions[i].map[j] = malloc(map_size * sizeof(int));
+            memcpy(actions[i].map[j], maps[word_size - 1][word_size][0], map_size * sizeof(int));
+        }
+        actions[i].crossword = malloc(crossword_size * sizeof(char*));
+        for (int j = 0 ; j < crossword_size ; ++j) {
+            actions[i].crossword[j] = malloc(crossword_size * sizeof(char));
+        }
+    }
+    actions[wordnode_count].crossword = crossword;
+    return actions;
+}
+
+void actioncpy(Action dest, Action src, int crossword_size, int wordnode_count, int* map_sizes) {
+
 }

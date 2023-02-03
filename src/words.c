@@ -145,26 +145,23 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
     return words;
 }
 
-void prop_word(Wordnode words, int last, char** crossword, Bitmaps maps, int* map_sizes) {
+void prop_word(Action action, Wordnode words, int last, char** crossword, Bitmaps maps, int* map_sizes) {
     if (!last) return;
     int index = 0;
-    char* filter = create_filter(crossword, words[0]);
-    int* map = create_map(maps, map_sizes, filter);
-    int min = sum_bit(map, map_sizes[strlen(filter) - 1]);
-    free(map);
-    free(filter);
+    int min = sum_bit(action.map[0], map_sizes[words[0].end - words[0].begin]);
     for (int i = 1 ; i <= last ; ++i) {
-        filter = create_filter(crossword, words[i]);
-        map = create_map(maps, map_sizes, filter);
-        int temp = sum_bit(map, map_sizes[strlen(filter) - 1]);
+        int* map = action.map[i];
+        Word word = words[i];
+        int temp = sum_bit(map, map_sizes[word.end - word.begin]);
         if (temp < min) {
             min = temp;
             index = i;
         }
-        free(map);
-        free(filter);
     }
     Word temp = words[last];
     words[last] = words[index];
     words[index] = temp;
+    int* temp_m = action.map[last];
+    action.map[last] = action.map[index];
+    action.map[index] = temp_m;
 }

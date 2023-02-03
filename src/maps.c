@@ -7,6 +7,8 @@
 
 extern int errno;
 
+
+//TODO fix reading the dictionary only ones
 Bitmaps init_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes_ret) {
 
     Bitmaps maps = malloc(max_word_size * sizeof(int***));
@@ -104,6 +106,26 @@ int* create_map(Bitmaps maps, int* map_sizes, char* filter) {
         }
     }
     return map;
+}
+
+void update_map(char** crossword, int* map, int map_size, Word word, Bitmaps maps) {
+    int word_size = word.end - word.begin + 1;
+    if (word.orientation) {
+        for (int i = word.begin ; i <= word.end ; ++i) {
+            char ch = crossword[i][word.constant];
+            if (ch != '-') {
+                join_map(map, maps[word_size - 1][i][ch - 'a'], map_size);
+            }
+        }
+    }
+    else {
+        for (int i = word.begin ; i <= word.end ; ++i) {
+            char ch = crossword[word.constant][i];
+            if (ch != '-') {
+                join_map(map, maps[word_size - 1][i][ch - 'a'], map_size);
+            }
+        }
+    }
 }
 
 void join_map(int* map1, int* map2, int map_size) {

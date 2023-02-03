@@ -3,7 +3,7 @@
 
 typedef struct Word* Wordnode;
 typedef struct Word Word;
-typedef struct Action Action;
+typedef struct State State;
 typedef char** Dictionary;
 typedef int**** Bitmaps;
 
@@ -15,11 +15,10 @@ struct Word {
     int end;
 };
 
-// Stack 101
-struct Action {
-    Wordnode wordnode;
-    int* map;
-    char* changed;
+// Stack 101 rename action -> state
+struct State {
+    char** crossword;
+    int** map;
 };
 
 //TODO find better names maybe
