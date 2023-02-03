@@ -20,43 +20,21 @@ void write_word(char** crossword, Word node, char* word) {
     }
 }
 
-void delete_word(char** crossword, Word node, char* word) {
-    if (node.orientation) { /* Vertical */
-        for (int i = node.begin, j = 0 ; i <= node.end ; i++, j++) {
-            if (word[j] != '?') crossword[i][node.constant] = '-';
-        }
-    }
-    else { /* Horizontal */
-        for (int i = node.begin, j = 0 ; i <= node.end ; i++, j++) {
-            if (word[j] != '?') crossword[node.constant][i] = '-';
-        }
-    }
-}
-
 //TODO change to actual values
 /**
  * @details debug tool
 */
 void print_words(Wordnode words, int wordnode_count) {
     for (int i = 0 ; i < wordnode_count ; ++i) {
-        int c[4] = {
+        int c[5] = {
             words[i].orientation,
             words[i].constant,
             words[i].begin,
-            words[i].end
+            words[i].end,
+            words[i].size
         };
-        printf("%d. %s: %d begin: %d end: %d", i + 1, c[0] ? "col" : "row", c[1], c[2], c[3]);
+        printf("%d. %s: %d begin: %d end: %d size: %d\n", i + 1, c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
     }
-}
-
-char* word_written(char* word, char* filter) {
-    int size = strlen(word);
-    char* written = malloc((size + 1) * sizeof(char));
-    for (int i = 0 ; i < size ; i++) {
-        written[i] = filter[i] == '?' ? word[i] : '?';
-    }
-    written[size] = '\0';
-    return written;
 }
 
 Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
@@ -100,7 +78,8 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                         .orientation = 0,
                         .constant = i,
                         .begin = begin_hor,
-                        .end = j - 1
+                        .end = j - 1,
+                        .size = j - begin_hor
                     };
                 }
                 hor_size = 0;
@@ -117,7 +96,8 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                         .orientation = 1,
                         .constant = i,
                         .begin = begin_ver,
-                        .end = j - 1
+                        .end = j - 1,
+                        .size = j - begin_ver
                     };
                 }
                 ver_size = 0;
@@ -128,7 +108,8 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                 .orientation = 0,
                 .constant = i,
                 .begin = begin_hor,
-                .end = crossword_size - 1
+                .end = crossword_size - 1,
+                .size = crossword_size - begin_hor
             };
         }
         if (ver_size > 1) {
@@ -136,7 +117,8 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                 .orientation = 1,
                 .constant = i,
                 .begin = begin_ver,
-                .end = crossword_size - 1
+                .end = crossword_size - 1,
+                .size = crossword_size - begin_ver
             };
         }
         hor_size = 0;
@@ -145,14 +127,12 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
     return words;
 }
 
-void prop_word(Action action, Wordnode words, int last, char** crossword, Bitmaps maps, int* map_sizes) {
-    if (!last) return;
-    int index = 0;
-    int min = sum_bit(action.map[0], map_sizes[words[0].end - words[0].begin]);
-    for (int i = 1 ; i <= last ; ++i) {
-        int* map = action.map[i];
-        Word word = words[i];
-        int temp = sum_bit(map, map_sizes[word.end - word.begin]);
+void prop_word(State* states, int** maps, Wordnode words, int last, int* map_sizes, int wordnode_count) {
+    if (last == wordnode_count - 1) return;
+    int index = last;
+    int min = sum_bit(maps[index], map_sizes[words[index].size - 1]);
+    for (int i = index + 1 ; i < wordnode_count ; ++i) {
+        int temp = sum_bit(maps[i], map_sizes[words[i].size - 1]);
         if (temp < min) {
             min = temp;
             index = i;
@@ -161,7 +141,9 @@ void prop_word(Action action, Wordnode words, int last, char** crossword, Bitmap
     Word temp = words[last];
     words[last] = words[index];
     words[index] = temp;
-    int* temp_m = action.map[last];
-    action.map[last] = action.map[index];
-    action.map[index] = temp_m;
+    for (int i = 0 ; i < wordnode_count ; ++i) {
+        int* temp_m = states[i].map[last];
+        states[i].map[last] = states[i].map[index];
+        states[i].map[index] = temp_m;
+    }
 }

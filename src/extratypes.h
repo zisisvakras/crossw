@@ -13,6 +13,7 @@ struct Word {
     int constant;
     int begin;
     int end;
+    int size;
 };
 
 // Stack 101 rename action -> state

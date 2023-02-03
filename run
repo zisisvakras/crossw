@@ -3,7 +3,8 @@
 make > /dev/null
 
 /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/Words.txt
+#gdb --args ./target/crossw data/Crossword$1.txt -dict data/Words.txt
+valgrind ./target/crossw data/Crossword$1.txt -dict data/Words.txt
+#/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Empty7.txt -dict data/Words.txt
 
 make clean > /dev/null
-
-#run data/Crossword1.txt -dict data/Words.txt

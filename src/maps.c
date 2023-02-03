@@ -95,26 +95,12 @@ void print_map(int* map, int map_size) {
     putchar('\n');
 }
 
-int* create_map(Bitmaps maps, int* map_sizes, char* filter) {
-    int word_size = strlen(filter);
-    int map_size = map_sizes[word_size - 1];
-    int* map = malloc(map_size * sizeof(int));
-    memcpy(map, maps[word_size - 1][word_size][0], map_size * sizeof(int));
-    for (int i = 0 ; i < word_size ; ++i) {
-        if (filter[i] != '?') {
-            join_map(map, maps[word_size - 1][i][filter[i] - 'a'], map_size);
-        }
-    }
-    return map;
-}
-
 void update_map(char** crossword, int* map, int map_size, Word word, Bitmaps maps) {
-    int word_size = word.end - word.begin + 1;
     if (word.orientation) {
         for (int i = word.begin ; i <= word.end ; ++i) {
             char ch = crossword[i][word.constant];
             if (ch != '-') {
-                join_map(map, maps[word_size - 1][i][ch - 'a'], map_size);
+                join_map(map, maps[word.size - 1][i - word.begin][ch - 'a'], map_size);
             }
         }
     }
@@ -122,7 +108,7 @@ void update_map(char** crossword, int* map, int map_size, Word word, Bitmaps map
         for (int i = word.begin ; i <= word.end ; ++i) {
             char ch = crossword[word.constant][i];
             if (ch != '-') {
-                join_map(map, maps[word_size - 1][i][ch - 'a'], map_size);
+                join_map(map, maps[word.size - 1][i - word.begin][ch - 'a'], map_size);
             }
         }
     }
