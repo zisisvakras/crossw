@@ -122,8 +122,6 @@ void draw_crossword(char** crossword, int crossword_size) {
 //     return 0;
 // }
 
-
-//TODO break struct State into two different stacks
 void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Wordnode words, 
                      int wordnode_count, Bitmaps bitmaps, int* map_sizes) {
     int full_map_size = 0;
@@ -135,6 +133,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
     init_states(&crosswords, &maps, *crossword, crossword_size, words, wordnode_count, bitmaps, map_sizes, full_map_size);
     int index = 0;
     prop_word(maps, words, index, map_sizes, wordnode_count);
+    int backtrack = 1;
     while (index < wordnode_count) {
         /* Find word in bigdict */
         char* word_found;
@@ -144,15 +143,29 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                 exit(1);
             }
             --index;
+            ++backtrack;
+            // for (int j = index + 1 ; j < wordnode_count ; ++j) {
+            //     update_map(crosswords[index], maps[j], map_sizes[words[j].size - 1], words[j], bitmaps);
+            // }
             continue;
         }
         if (index == wordnode_count - 1) break;
         memcpy(crosswords[index + 1][0], crosswords[index][0], crossword_size * crossword_size * sizeof(char));
         write_word(crosswords[index + 1], words[index], word_found);
         ++index;
-        for (int i = index ; i < wordnode_count ; ++i) { //TODO make maps structs that contain bit sum
-            update_map(crosswords[index], maps[i], map_sizes[words[i].size - 1], words[i], bitmaps);
+        //TODO possible optimize
+        for (int b = 0 ; b < backtrack ; ++b) {
+            if (b > 0) update_map(crosswords[index], maps[index + b - 1], map_sizes[words[index + b - 1].size - 1], words[index + b - 1], bitmaps);
+            for (int i = 0 ; i < words[index + b - 1].insecc ; ++i) {
+                for (int j = index + b ; j < wordnode_count ; ++j) {
+                    if (words[j].id == words[index + b - 1].insecs[i]) {
+                        update_map(crosswords[index], maps[j], map_sizes[words[j].size - 1], words[j], bitmaps);
+                        //if (sum_bit(maps[j], map_sizes[words[j].size - 1]) == 0) backtrack = 1;
+                    }
+                }
+            }
         }
+        backtrack = 1;
         prop_word(maps, words, index, map_sizes, wordnode_count);
     }
     *crossword = crosswords[wordnode_count - 1];

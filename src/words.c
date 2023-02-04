@@ -25,14 +25,21 @@ void write_word(char** crossword, Word node, char* word) {
 */
 void print_words(Wordnode words, int wordnode_count) {
     for (int i = 0 ; i < wordnode_count ; ++i) {
-        int c[5] = {
+        int c[7] = {
+            words[i].id,
             words[i].orientation,
             words[i].constant,
             words[i].begin,
             words[i].end,
-            words[i].size
+            words[i].size,
+            words[i].insecc
         };
-        printf("%d. %s: %d begin: %d end: %d size: %d\n", i + 1, c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
+        printf("%d. %s: %d begin: %d end: %d size: %d insecc: %d\n", c[0], c[1] ? "col" : "row", c[2], c[3], c[4], c[5], c[6]);
+        printf("insecs: ");
+        for (int j = 0 ; j < c[6] ; ++j) {
+            printf("%d ", words[i].insecs[j]);
+        }
+        printf("\n");
     }
 }
 
@@ -96,6 +103,7 @@ void print_solution(char** crossword, int crossword_size) {
     }
 }
 
+//TODO optimize
 Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
     int hor_size = 0, ver_size = 0, count = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
@@ -133,13 +141,17 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
             }
             if (crossword[i][j] == '#') {
                 if (hor_size > 1) {
-                    words[index++] = (Word) {
+                    words[index] = (Word) {
+                        .id = index,
                         .orientation = 0,
                         .constant = i,
                         .begin = begin_hor,
                         .end = j - 1,
-                        .size = j - begin_hor
+                        .size = j - begin_hor,
+                        .insecc = 0,
+                        .insecs = NULL
                     };
+                    index++;
                 }
                 hor_size = 0;
             }
@@ -151,37 +163,125 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
             }
             if (crossword[j][i] == '#') {
                 if (ver_size > 1) {
-                    words[index++] = (Word) {
+                    words[index] = (Word) {
+                        .id = index,
                         .orientation = 1,
                         .constant = i,
                         .begin = begin_ver,
                         .end = j - 1,
-                        .size = j - begin_ver
+                        .size = j - begin_ver,
+                        .insecc = 0,
+                        .insecs = NULL
                     };
+                    index++;
                 }
                 ver_size = 0;
             }
         }
         if (hor_size > 1) {
-            words[index++] = (Word) {
+            words[index] = (Word) {
+                .id = index,
                 .orientation = 0,
                 .constant = i,
                 .begin = begin_hor,
                 .end = crossword_size - 1,
-                .size = crossword_size - begin_hor
+                .size = crossword_size - begin_hor,
+                .insecc = 0,
+                .insecs = NULL
             };
+            index++;
         }
         if (ver_size > 1) {
-            words[index++] = (Word) {
+            words[index] = (Word) {
+                .id = index,
                 .orientation = 1,
                 .constant = i,
                 .begin = begin_ver,
                 .end = crossword_size - 1,
-                .size = crossword_size - begin_ver
+                .size = crossword_size - begin_ver,
+                .insecc = 0,
+                .insecs = NULL
             };
+            index++;
         }
         hor_size = 0;
         ver_size = 0;
+    }
+    for (int i = 0 ; i < (*wordnode_count) ; ++i) {
+        int* buf_insecs = malloc((*wordnode_count) * sizeof(int)); //TODO add checks
+        int buf_insecc = 0;
+        if (words[i].orientation) {
+            for (int j = words[i].begin ; j <= words[i].end ; ++j) {
+                int found = 0;
+                if (words[i].constant != 0) {
+                    char ch = crossword[j][words[i].constant - 1];
+                    if (ch != '#') {
+                        for (int k = 0 ; k < (*wordnode_count) ; ++k) {
+                            if (words[k].orientation) continue;
+                            int cord = words[i].constant - 1;
+                            if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
+                                buf_insecs[buf_insecc] = words[k].id;
+                                ++buf_insecc;
+                                found = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!found && words[i].constant != crossword_size - 1) {
+                    char ch = crossword[j][words[i].constant + 1];
+                    if (ch != '#') {
+                        for (int k = 0 ; k < (*wordnode_count) ; ++k) {
+                            if (words[k].orientation) continue;
+                            int cord = words[i].constant + 1;
+                            if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
+                                buf_insecs[buf_insecc] = words[k].id;
+                                ++buf_insecc;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            for (int j = words[i].begin ; j <= words[i].end ; ++j) {
+                int found = 0;
+                if (words[i].constant != 0) {
+                    char ch = crossword[words[i].constant - 1][j];
+                    if (ch != '#') {
+                        for (int k = 0 ; k < (*wordnode_count) ; ++k) {
+                            if (!words[k].orientation) continue;
+                            int cord = words[i].constant - 1;
+                            if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
+                                buf_insecs[buf_insecc] = words[k].id;
+                                ++buf_insecc;
+                                found = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!found && words[i].constant != crossword_size - 1) {
+                    char ch = crossword[words[i].constant + 1][j];
+                    if (ch != '#') {
+                        // Check which word has letter
+                        for (int k = 0 ; k < (*wordnode_count) ; ++k) {
+                            if (!words[k].orientation) continue;
+                            int cord = words[i].constant + 1;
+                            if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
+                                buf_insecs[buf_insecc] = words[k].id;
+                                ++buf_insecc;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        words[i].insecc = buf_insecc;
+        words[i].insecs = malloc(buf_insecc * sizeof(int));
+        memcpy(words[i].insecs, buf_insecs, buf_insecc * sizeof(int));
     }
     return words;
 }

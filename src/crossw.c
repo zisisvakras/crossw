@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
         return 0;
     }
     //print_dict(bigdict, max_word_size);
+    //print_words(words, wordnode_count);
     solve_crossword(&crossword, crossword_size, bigdict, words, wordnode_count, maps, map_sizes);
     if (draw_mode) draw_crossword(crossword, crossword_size);
     else print_solution(crossword, crossword_size);
