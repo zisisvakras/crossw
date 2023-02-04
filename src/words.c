@@ -20,7 +20,6 @@ void write_word(char** crossword, Word node, char* word) {
     }
 }
 
-//TODO change to actual values
 /**
  * @details debug tool
 */
@@ -34,6 +33,66 @@ void print_words(Wordnode words, int wordnode_count) {
             words[i].size
         };
         printf("%d. %s: %d begin: %d end: %d size: %d\n", i + 1, c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
+    }
+}
+
+/**
+ * @details debug tool
+*/
+void print_words_val(char** crossword, Wordnode words, int wordnode_count) {
+    for (int i = 0 ; i < wordnode_count ; ++i) {
+        printf("%d. (%s)", i, words[i].orientation ? "ver" : "hor");
+        if (words[i].orientation) {
+            for (int j = words[i].begin ; j <= words[i].end ; ++j) {
+                putchar(crossword[j][words[i].constant]);
+            }
+        }
+        else {
+            for (int j = words[i].begin ; j <= words[i].end ; ++j) {
+                putchar(crossword[words[i].constant][j]);
+            }
+        }
+        putchar('\n');
+    }
+}
+
+void print_solution(char** crossword, int crossword_size) {
+    int flag = 0;
+    for (int i = 0 ; i < crossword_size ; i++) {
+        for (int j = 0 ; j < crossword_size ; j++) {
+            if (crossword[i][j] != '#') {
+                if (!flag) {
+                    if (j == crossword_size - 1) continue;
+                    if (crossword[i][j + 1] != '#') flag = 1;
+                    else continue;
+                }
+                putchar(crossword[i][j]);
+            }
+            if (crossword[i][j] == '#') {
+                if (flag) putchar('\n');
+                flag = 0;
+            }
+        }
+        if (flag) putchar('\n');
+        flag = 0;
+    }
+    for (int i = 0 ; i < crossword_size ; i++) {
+        for (int j = 0 ; j < crossword_size ; j++) {
+            if (crossword[j][i] != '#') {
+                if (!flag) {
+                    if (j == crossword_size - 1) continue;
+                    if (crossword[j + 1][i] != '#') flag = 1;
+                    else continue;
+                }
+                putchar(crossword[j][i]);
+            }
+            if (crossword[j][i] == '#') {
+                if (flag) putchar('\n');
+                flag = 0;
+            }
+        }
+        if (flag) putchar('\n');
+        flag = 0;
     }
 }
 

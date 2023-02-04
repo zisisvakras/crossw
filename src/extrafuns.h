@@ -30,6 +30,8 @@ void write_word(char** crossword, Word node, char* word);
 Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count);
 void print_words(Wordnode words, int wordnode_count);
 void prop_word(State* states, int** maps, Wordnode words, int last, int* map_sizes, int wordnode_count);
+void print_words_val(char** crossword, Wordnode words, int wordnode_count);
+void print_solution(char** crossword, int crossword_size);
 
 /* maps.c functions */
 Bitmaps init_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes);

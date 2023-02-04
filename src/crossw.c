@@ -7,9 +7,9 @@
 
 extern int errno;
 
+//FIXME update makefile
 int main(int argc, char** argv) {
 
-    //TODO better checking for invalid arguments
     if (argc < 2) { /* Argument error handling */
         fprintf(stderr, "Not enough arguments\n");
         return 1;
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     //print_dict(bigdict, max_word_size);
     solve_crossword(&crossword, crossword_size, bigdict, words, wordnode_count, maps, map_sizes);
     if (draw_mode) draw_crossword(crossword, crossword_size);
-    draw_crossword(crossword, crossword_size);
+    else print_solution(crossword, crossword_size);
     free_dictionary(bigdict, max_word_size, words_count);
     printf("dict: %s cross: %s max: %d\n", dictionary_path, crossword_path, max_word_size);
     return 0;

@@ -73,13 +73,12 @@ void draw_crossword(char** crossword, int crossword_size) {
     }
 }
 
-//FIXME LATER
-// int check_crossword(char** crossword, int crossward_size, Wordnode* words, int wordnode_count, Dictnode* dictionary, Bitmaps maps, int* map_sizes) {
+//FIXME later
+// int check_crossword(Dictionary* dictionary, char** crossword, int crossward_size, Bitmaps maps, int* map_sizes, int wordnode_count) {
+
 //     char* buffer = malloc(sizeof(char) * 81);
-//     if (buffer == NULL) { /* Malloc error handling */
-//         fprintf(stderr, "Error while allocating memory: %s", strerror(errno));
-//         return errno;
-//     }
+//     if (buffer == NULL) /* Malloc error handling */
+//         error("Error while allocating memory", errno);
 
 //     int count = 0;
 //     while (fscanf(stdin, "%80s", buffer) == 1) {
@@ -125,7 +124,6 @@ void draw_crossword(char** crossword, int crossword_size) {
 
 
 //TODO break struct State into two different stacks
-//TODO malloc checks, wordnode_count -> index
 void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Wordnode words, 
                      int wordnode_count, Bitmaps maps, int* map_sizes) {
     int full_map_size = 0;
@@ -160,22 +158,30 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
     *crossword = states[wordnode_count - 1].crossword;
 }
 
-//TODO make actions wordnode_count not +1
-//TODO malloc checks
 State* init_states(char** crossword, int crossword_size, Wordnode words, 
                      int wordnode_count, Bitmaps maps, int* map_sizes, int full_map_size) 
 {
     State* states = malloc(wordnode_count * sizeof(State));
+    if (states == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
     for (int i = 0 ; i < wordnode_count ; ++i) {
         // Cross init
         states[i].crossword = malloc(crossword_size * sizeof(char*));
+        if (states[i].crossword == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
         states[i].crossword[0] = malloc(crossword_size * crossword_size * sizeof(char));
+        if (states[i].crossword[0] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
         for (int j = 1, k = crossword_size ; j < crossword_size ; ++j, k+=crossword_size) {
             states[i].crossword[j] = states[i].crossword[0] + k;
         }
         // Map init
         states[i].map = malloc((wordnode_count + 1) * sizeof(int*));
+        if (states[i].map == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
         states[i].map[0] = malloc(full_map_size * sizeof(int));
+        if (states[i].map[0] == NULL) /* Malloc error handling */
+            error("Error while allocating memory", errno);
         states[i].map[wordnode_count] = states[i].map[0];
         int map_index = map_sizes[words[0].size - 1];
         for (int j = 1 ; j < wordnode_count ; ++j) {

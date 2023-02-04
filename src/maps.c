@@ -7,8 +7,6 @@
 
 extern int errno;
 
-
-//TODO fix reading the dictionary only ones
 Bitmaps init_maps(Dictionary* bigdict, int max_word_size, int* words_count, int** map_sizes_ret) {
 
     Bitmaps maps = malloc(max_word_size * sizeof(int***));
@@ -47,16 +45,19 @@ Bitmaps init_maps(Dictionary* bigdict, int max_word_size, int* words_count, int*
                 maps[word_size][position][letter] = calloc(map_sizes[word_size], sizeof(int));
                 if (maps[word_size][position][letter] == NULL) /* Calloc error handling */
                     error("Error while allocating memory", errno);
-
-                /* Throw 1 to all found letters */
-                for (int i = 0 ; i < words_count[word_size] ; ++i) {
-                    if (bigdict[word_size][i][position] == 'a' + letter) {
-                        maps[word_size][position][letter][i >> 5] |= 1 << (i & 0x1F);
-                    }
-                }
             }
         }
     }
+    for (int i = 1 ; i < max_word_size ; ++i) {
+        for (int j = 0 ; j < words_count[i] ; ++j) {
+            char* word = bigdict[i][j];
+            for (int k = 0 ; word[k] ; ++k) {
+                /* Throw 1 to the appropriate bitmap */
+                maps[i][k][word[k] - 'a'][j >> 5] |= 1 << (j & 0x1F);
+            }
+        }
+    }
+                
     for (int word_size = 1 ; word_size < max_word_size ; ++word_size) {
 
         *maps[word_size][word_size + 1] = malloc(map_sizes[word_size] * sizeof(int));
