@@ -16,12 +16,6 @@ struct Word {
     int size;
 };
 
-// Stack 101 rename action -> state
-struct State {
-    char** crossword;
-    int** map;
-};
-
 //TODO find better names maybe
 
 #endif

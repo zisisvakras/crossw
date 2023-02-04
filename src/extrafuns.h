@@ -14,8 +14,8 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                      int wordnode_count, Bitmaps maps, int* map_sizes);
 //int check_crossword(char** crossword, int crossward_size, Wordnode* words, int hor_count, int ver_count, Dictnode* dictionary, Bitmaps maps, int* map_sizes);
 void init_crossword(char* crossword_path, char*** crossword, int* crossword_size, int* max_word_size);
-State* init_states(char** crossword, int crossword_size, Wordnode words, 
-                     int wordnode_count, Bitmaps maps, int* map_sizes, int full_map_size);
+void init_states(char**** crosswords_ret, int*** maps_ret, char** crossword, int crossword_size, Wordnode words, 
+                     int wordnode_count, Bitmaps bitmaps, int* map_sizes, int full_map_size) ;
 
 /* dict.c functions */
 Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** words_count_ret);
@@ -29,7 +29,7 @@ void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int
 void write_word(char** crossword, Word node, char* word);
 Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count);
 void print_words(Wordnode words, int wordnode_count);
-void prop_word(State* states, int** maps, Wordnode words, int last, int* map_sizes, int wordnode_count);
+void prop_word(int** maps, Wordnode words, int last, int* map_sizes, int wordnode_count);
 void print_words_val(char** crossword, Wordnode words, int wordnode_count);
 void print_solution(char** crossword, int crossword_size);
 

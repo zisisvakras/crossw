@@ -125,19 +125,20 @@ void draw_crossword(char** crossword, int crossword_size) {
 
 //TODO break struct State into two different stacks
 void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Wordnode words, 
-                     int wordnode_count, Bitmaps maps, int* map_sizes) {
+                     int wordnode_count, Bitmaps bitmaps, int* map_sizes) {
     int full_map_size = 0;
     for (int j = 0 ; j < wordnode_count ; ++j) {
         full_map_size += map_sizes[words[j].size - 1];
     }
-    State* states = init_states(*crossword, crossword_size, words, wordnode_count, maps, map_sizes, full_map_size);
+    char*** crosswords = NULL;
+    int** maps = NULL;
+    init_states(&crosswords, &maps, *crossword, crossword_size, words, wordnode_count, bitmaps, map_sizes, full_map_size);
     int index = 0;
-    prop_word(states, states[index].map, words, index, map_sizes, wordnode_count);
+    prop_word(maps, words, index, map_sizes, wordnode_count);
     while (index < wordnode_count) {
         /* Find word in bigdict */
-        int* map = states[index].map[index];
         char* word_found;
-        if ((word_found = find_word(bigdict[words[index].size - 1], map, map_sizes[words[index].size - 1])) == NULL) {
+        if ((word_found = find_word(bigdict[words[index].size - 1], maps[index], map_sizes[words[index].size - 1])) == NULL) {
             if (index == 0) {
                 fprintf(stderr, "what happend\n");
                 exit(1);
@@ -146,54 +147,58 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             continue;
         }
         if (index == wordnode_count - 1) break;
-        memcpy(states[index + 1].crossword[0], states[index].crossword[0], crossword_size * crossword_size * sizeof(char));
-        memcpy(states[index + 1].map[wordnode_count], states[index].map[wordnode_count], full_map_size * sizeof(int));
-        write_word(states[index + 1].crossword, words[index], word_found);
+        memcpy(crosswords[index + 1][0], crosswords[index][0], crossword_size * crossword_size * sizeof(char));
+        write_word(crosswords[index + 1], words[index], word_found);
         ++index;
         for (int i = index ; i < wordnode_count ; ++i) { //TODO make maps structs that contain bit sum
-            update_map(states[index].crossword, states[index].map[i], map_sizes[words[i].size - 1], words[i], maps);
+            update_map(crosswords[index], maps[i], map_sizes[words[i].size - 1], words[i], bitmaps);
         }
-        prop_word(states, states[index].map, words, index, map_sizes, wordnode_count);
+        prop_word(maps, words, index, map_sizes, wordnode_count);
     }
-    *crossword = states[wordnode_count - 1].crossword;
+    *crossword = crosswords[wordnode_count - 1];
 }
 
-State* init_states(char** crossword, int crossword_size, Wordnode words, 
-                     int wordnode_count, Bitmaps maps, int* map_sizes, int full_map_size) 
+void init_states(char**** crosswords_ret, int*** maps_ret, char** crossword, int crossword_size, Wordnode words, 
+                     int wordnode_count, Bitmaps bitmaps, int* map_sizes, int full_map_size) 
 {
-    State* states = malloc(wordnode_count * sizeof(State));
-    if (states == NULL) /* Malloc error handling */
+    /* Crosswords initialization */
+    char*** crosswords = malloc(wordnode_count * sizeof(char**));
+    if (crosswords == NULL) /* Malloc error handling */
         error("Error while allocating memory", errno);
     for (int i = 0 ; i < wordnode_count ; ++i) {
-        // Cross init
-        states[i].crossword = malloc(crossword_size * sizeof(char*));
-        if (states[i].crossword == NULL) /* Malloc error handling */
+        crosswords[i] = malloc(crossword_size * sizeof(char*));
+        if (crosswords[i] == NULL) /* Malloc error handling */
             error("Error while allocating memory", errno);
-        states[i].crossword[0] = malloc(crossword_size * crossword_size * sizeof(char));
-        if (states[i].crossword[0] == NULL) /* Malloc error handling */
+        crosswords[i][0] = malloc(crossword_size * crossword_size * sizeof(char));
+        if (crosswords[i][0] == NULL) /* Malloc error handling */
             error("Error while allocating memory", errno);
         for (int j = 1, k = crossword_size ; j < crossword_size ; ++j, k+=crossword_size) {
-            states[i].crossword[j] = states[i].crossword[0] + k;
+            crosswords[i][j] = crosswords[i][0] + k;
         }
-        // Map init
-        states[i].map = malloc((wordnode_count + 1) * sizeof(int*));
-        if (states[i].map == NULL) /* Malloc error handling */
-            error("Error while allocating memory", errno);
-        states[i].map[0] = malloc(full_map_size * sizeof(int));
-        if (states[i].map[0] == NULL) /* Malloc error handling */
-            error("Error while allocating memory", errno);
-        states[i].map[wordnode_count] = states[i].map[0];
-        int map_index = map_sizes[words[0].size - 1];
-        for (int j = 1 ; j < wordnode_count ; ++j) {
-            states[i].map[j] = states[i].map[0] + map_index;
-            map_index += map_sizes[words[j].size - 1];
-        }
-        
     }
-    memcpy(states[0].crossword[0], crossword[0], crossword_size * crossword_size * sizeof(char));
+
+    /* Maps initialization */
+    int** maps = malloc(wordnode_count * sizeof(int*));
+    if (maps == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
+    maps[0] = malloc(full_map_size * sizeof(int));
+    if (maps[0] == NULL) /* Malloc error handling */
+        error("Error while allocating memory", errno);
+    
+    int map_index = map_sizes[words[0].size - 1];
+    for (int j = 1 ; j < wordnode_count ; ++j) {
+        maps[j] = maps[0] + map_index;
+        map_index += map_sizes[words[j].size - 1];
+    }
+
+    /* Initial copy */
+    memcpy(crosswords[0][0], crossword[0], crossword_size * crossword_size * sizeof(char));
     for (int j = 0 ; j < wordnode_count ; ++j) {
         int size = words[j].size;
-        memcpy(states[0].map[j], maps[size - 1][size][0], map_sizes[size - 1] * sizeof(int));
+        memcpy(maps[j], bitmaps[size - 1][size][0], map_sizes[size - 1] * sizeof(int));
     }
-    return states;
+
+    *crosswords_ret = crosswords;
+    *maps_ret = maps;
+    return;
 }

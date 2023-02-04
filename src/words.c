@@ -186,7 +186,7 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
     return words;
 }
 
-void prop_word(State* states, int** maps, Wordnode words, int last, int* map_sizes, int wordnode_count) {
+void prop_word(int** maps, Wordnode words, int last, int* map_sizes, int wordnode_count) {
     if (last == wordnode_count - 1) return;
     int index = last;
     int min = sum_bit(maps[index], map_sizes[words[index].size - 1]);
@@ -200,9 +200,7 @@ void prop_word(State* states, int** maps, Wordnode words, int last, int* map_siz
     Word temp = words[last];
     words[last] = words[index];
     words[index] = temp;
-    for (int i = 0 ; i < wordnode_count ; ++i) {
-        int* temp_m = states[i].map[last];
-        states[i].map[last] = states[i].map[index];
-        states[i].map[index] = temp_m;
-    }
+    int* temp_m = maps[last];
+    maps[last] = maps[index];
+    maps[index] = temp_m;
 }

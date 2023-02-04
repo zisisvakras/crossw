@@ -97,6 +97,7 @@ void print_map(int* map, int map_size) {
 }
 
 void update_map(char** crossword, int* map, int map_size, Word word, Bitmaps maps) {
+    memcpy(map, maps[word.size - 1][word.size][0], map_size * sizeof(int));
     if (word.orientation) {
         for (int i = word.begin ; i <= word.end ; ++i) {
             char ch = crossword[i][word.constant];
