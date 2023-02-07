@@ -9,6 +9,8 @@
         "unordered_set": "c",
         "vector": "c",
         "string_view": "c",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "map": "c",
+        "valarray": "c"
     }
 }

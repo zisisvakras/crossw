@@ -74,106 +74,98 @@ void draw_crossword(char** crossword, int crossword_size) {
 }
 
 //FIXME later
-// int check_crossword(Dictionary* dictionary, char** crossword, int crossward_size, Bitmaps maps, int* map_sizes, int wordnode_count) {
+// int check_crossword(Dictionary* dictionary, char** crossword, int crossward_size, Map*** maps, int* map_sizes, int wordnode_count) {
 
-//     char* buffer = malloc(sizeof(char) * 81);
-//     if (buffer == NULL) /* Malloc error handling */
-//         error("Error while allocating memory", errno);
+// //     char* buffer = malloc(sizeof(char) * 81);
+// //     if (buffer == NULL) /* Malloc error handling */
+// //         error("Error while allocating memory", errno);
 
-//     int count = 0;
-//     while (fscanf(stdin, "%80s", buffer) == 1) {
-//         int word_size = strlen(buffer);
-//         if (words[0][count].end - words[0][count].begin + 1 != word_size) {
-//             fprintf(stderr, "Word \"%s\" could not be placed\n", buffer);
-//             free(buffer);
-//             return 1;
-//         }
-//         int* map = create_map(maps, map_sizes, buffer);
-//         if (find_word(dictionary[word_size - 1], map, map_sizes[word_size - 1]) == NULL) {
-//             fprintf(stderr, "Word \"%s\" not in dictionary", buffer);
-//             free(buffer);
-//             return 1;
-//         }
-//         write_word(crossword, words[0][count], buffer);
-//         count++;
-//     }
+// //     int count = 0;
+// //     while (fscanf(stdin, "%80s", buffer) == 1) {
+// //         int word_size = strlen(buffer);
+// //         if (words[0][count].end - words[0][count].begin + 1 != word_size) {
+// //             fprintf(stderr, "Word \"%s\" could not be placed\n", buffer);
+// //             free(buffer);
+// //             return 1;
+// //         }
+// //         int* map = create_map(maps, map_sizes, buffer);
+// //         if (find_word(dictionary[word_size - 1], map, map_sizes[word_size - 1]) == NULL) {
+// //             fprintf(stderr, "Word \"%s\" not in dictionary", buffer);
+// //             free(buffer);
+// //             return 1;
+// //         }
+// //         write_word(crossword, words[0][count], buffer);
+// //         count++;
+// //     }
 
-//     if (count != hor_count) {
-//         fprintf(stderr, "Not enough words");
-//         return 1;
-//     }
+// //     if (count != hor_count) {
+// //         fprintf(stderr, "Not enough words");
+// //         return 1;
+// //     }
 
-//     for(int i = 0; i < ver_count; i++){
-//         Word word = words[1][i];
-//         int k = 0;
-//         for (int j = word.begin ; j < word.end ; j++, k++){
-//             buffer[k] = crossword[j][word.constant];
-//         }
-//         buffer[k] = '\0';
-//         int* map = create_map(maps, map_sizes, buffer);
-//         int word_size = strlen(buffer);
-//         if (find_word(dictionary[word_size - 1], map, map_sizes[word_size - 1]) == NULL) {
-//             fprintf(stderr, "Word \"%s\" not in dictionary", buffer);
-//             free(buffer);
-//             return 1;
-//         }
-//     }
-//     free(buffer);
-//     return 0;
+// //     for(int i = 0; i < ver_count; i++){
+// //         Word word = words[1][i];
+// //         int k = 0;
+// //         for (int j = word.begin ; j < word.end ; j++, k++){
+// //             buffer[k] = crossword[j][word.constant];
+// //         }
+// //         buffer[k] = '\0';
+// //         int* map = create_map(maps, map_sizes, buffer);
+// //         int word_size = strlen(buffer);
+// //         if (find_word(dictionary[word_size - 1], map, map_sizes[word_size - 1]) == NULL) {
+// //             fprintf(stderr, "Word \"%s\" not in dictionary", buffer);
+// //             free(buffer);
+// //             return 1;
+// //         }
+// //     }
+// //     free(buffer);
+// //     return 0;
 // }
 
-void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Wordnode words, 
-                     int wordnode_count, Bitmaps bitmaps, int* map_sizes) {
-    int full_map_size = 0;
-    for (int j = 0 ; j < wordnode_count ; ++j) {
-        full_map_size += map_sizes[words[j].size - 1];
-    }
-    char*** crosswords = NULL;
-    int** maps = NULL;
-    init_states(&crosswords, &maps, *crossword, crossword_size, words, wordnode_count, bitmaps, map_sizes, full_map_size);
-    int index = 0;
-    prop_word(maps, words, index, map_sizes, wordnode_count);
-    int backtrack = 1;
+void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Word* words, //TODO CHECK MAPS FOR SHIFT (MAYBE USE UNSIGNED)
+                     int wordnode_count, Map*** bitmaps) {
+                        //TODO ΜΑΚΕ AN ARRAY SIZE WORDNODE_COUNT THAT HOLDS ALL WORD POINTERS THAT NEED UPDATE
+    char*** crosswords = init_crosswords(*crossword, crossword_size, wordnode_count);
+    int index = 0; //TODO maybe add sum_bit inside update_map
+    prop_word(words, wordnode_count, index);
     while (index < wordnode_count) {
         /* Find word in bigdict */
-        char* word_found;
-        if ((word_found = find_word(bigdict[words[index].size - 1], maps[index], map_sizes[words[index].size - 1])) == NULL) {
+        char* word_found = find_word(bigdict[words[index].size - 1], words[index]);
+        if (word_found == NULL) {
             if (index == 0) {
                 fprintf(stderr, "what happend\n");
                 exit(1);
             }
             --index;
-            ++backtrack;
-            // for (int j = index + 1 ; j < wordnode_count ; ++j) {
-            //     update_map(crosswords[index], maps[j], map_sizes[words[j].size - 1], words[j], bitmaps);
-            // }
-            continue;
-        }
-        if (index == wordnode_count - 1) break;
-        memcpy(crosswords[index + 1][0], crosswords[index][0], crossword_size * crossword_size * sizeof(char));
-        write_word(crosswords[index + 1], words[index], word_found);
-        ++index;
-        //TODO possible optimize
-        for (int b = 0 ; b < backtrack ; ++b) {
-            if (b > 0) update_map(crosswords[index], maps[index + b - 1], map_sizes[words[index + b - 1].size - 1], words[index + b - 1], bitmaps);
-            for (int i = 0 ; i < words[index + b - 1].insecc ; ++i) {
-                for (int j = index + b ; j < wordnode_count ; ++j) {
-                    if (words[j].id == words[index + b - 1].insecs[i]) {
-                        update_map(crosswords[index], maps[j], map_sizes[words[j].size - 1], words[j], bitmaps);
-                        //if (sum_bit(maps[j], map_sizes[words[j].size - 1]) == 0) backtrack = 1;
-                    }
+            for (int i = 0 ; words[index + 1].insecs[i] ; ++i) {
+                Word* word = words[index + 1].insecs[i];
+                if (word->in_use != 1) {
+                    update_map(crosswords[index], word, bitmaps);
+                    sum_bit(word->map);
                 }
             }
+            words[index + 1].in_use = 0;
+            continue;
         }
-        backtrack = 1;
-        prop_word(maps, words, index, map_sizes, wordnode_count);
+        memcpy(crosswords[index + 1][0], crosswords[index][0], crossword_size * crossword_size * sizeof(char));
+        write_word(crosswords[index + 1], words[index], word_found);
+        words[index].in_use = 1;
+        //TODO prune
+        for (int i = 0 ; words[index].insecs[i] ; ++i) {
+            Word* word = words[index].insecs[i];
+            if (word->in_use != 1) {
+                update_map(crosswords[index + 1], word, bitmaps);
+                sum_bit(word->map);
+            }
+        }
+        ++index;
+        if (index == wordnode_count - 1) break;
+        prop_word(words, wordnode_count, index);
     }
     *crossword = crosswords[wordnode_count - 1];
 }
 
-void init_states(char**** crosswords_ret, int*** maps_ret, char** crossword, int crossword_size, Wordnode words, 
-                     int wordnode_count, Bitmaps bitmaps, int* map_sizes, int full_map_size) 
-{
+char*** init_crosswords(char** crossword, int crossword_size, int wordnode_count) {
     /* Crosswords initialization */
     char*** crosswords = malloc(wordnode_count * sizeof(char**));
     if (crosswords == NULL) /* Malloc error handling */
@@ -189,29 +181,7 @@ void init_states(char**** crosswords_ret, int*** maps_ret, char** crossword, int
             crosswords[i][j] = crosswords[i][0] + k;
         }
     }
-
-    /* Maps initialization */
-    int** maps = malloc(wordnode_count * sizeof(int*));
-    if (maps == NULL) /* Malloc error handling */
-        error("Error while allocating memory", errno);
-    maps[0] = malloc(full_map_size * sizeof(int));
-    if (maps[0] == NULL) /* Malloc error handling */
-        error("Error while allocating memory", errno);
-    
-    int map_index = map_sizes[words[0].size - 1];
-    for (int j = 1 ; j < wordnode_count ; ++j) {
-        maps[j] = maps[0] + map_index;
-        map_index += map_sizes[words[j].size - 1];
-    }
-
     /* Initial copy */
     memcpy(crosswords[0][0], crossword[0], crossword_size * crossword_size * sizeof(char));
-    for (int j = 0 ; j < wordnode_count ; ++j) {
-        int size = words[j].size;
-        memcpy(maps[j], bitmaps[size - 1][size][0], map_sizes[size - 1] * sizeof(int));
-    }
-
-    *crosswords_ret = crosswords;
-    *maps_ret = maps;
-    return;
+    return crosswords;
 }

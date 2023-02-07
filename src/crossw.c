@@ -47,11 +47,10 @@ int main(int argc, char** argv) {
     Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &words_count);
 
     /* Initialize maps */
-    int* map_sizes = NULL;
-    Bitmaps maps = init_maps(bigdict, max_word_size, words_count, &map_sizes);
+    Map*** maps = init_maps(bigdict, max_word_size, words_count);
 
     int wordnode_count = 0;
-    Wordnode words = map_words(crossword, crossword_size, &wordnode_count);
+    Word* words = map_words(crossword, crossword_size, &wordnode_count, maps);
 
     if (check_mode) {
     //     int ret_check = check_crossword(crossword, crossword_size, words, wordnode_count, bigdict, maps, map_sizes);
@@ -60,7 +59,7 @@ int main(int argc, char** argv) {
     }
     //print_dict(bigdict, max_word_size);
     //print_words(words, wordnode_count);
-    solve_crossword(&crossword, crossword_size, bigdict, words, wordnode_count, maps, map_sizes);
+    solve_crossword(&crossword, crossword_size, bigdict, words, wordnode_count, maps);
     if (draw_mode) draw_crossword(crossword, crossword_size);
     else print_solution(crossword, crossword_size);
     free_dictionary(bigdict, max_word_size, words_count);

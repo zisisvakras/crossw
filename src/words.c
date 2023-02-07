@@ -23,30 +23,28 @@ void write_word(char** crossword, Word node, char* word) {
 /**
  * @details debug tool
 */
-void print_words(Wordnode words, int wordnode_count) {
+void print_words(Word* words, int wordnode_count) {
     for (int i = 0 ; i < wordnode_count ; ++i) {
-        int c[7] = {
-            words[i].id,
+        int c[5] = {
             words[i].orientation,
             words[i].constant,
             words[i].begin,
             words[i].end,
-            words[i].size,
-            words[i].insecc
+            words[i].size
         };
-        printf("%d. %s: %d begin: %d end: %d size: %d insecc: %d\n", c[0], c[1] ? "col" : "row", c[2], c[3], c[4], c[5], c[6]);
-        printf("insecs: ");
-        for (int j = 0 ; j < c[6] ; ++j) {
-            printf("%d ", words[i].insecs[j]);
-        }
-        printf("\n");
+        printf("(%p) %s: %d begin: %d end: %d size: %d\n", words + i, c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
+        print_map(words[i].map);
+        /* Interesections */
+        printf("insecs:\n");
+        int j = -1;
+        while(words[i].insecs[++j]) printf("%p\n", words[i].insecs[j]);
     }
 }
 
 /**
  * @details debug tool
 */
-void print_words_val(char** crossword, Wordnode words, int wordnode_count) {
+void print_words_val(char** crossword, Word* words, int wordnode_count) {
     for (int i = 0 ; i < wordnode_count ; ++i) {
         printf("%d. (%s)", i, words[i].orientation ? "ver" : "hor");
         if (words[i].orientation) {
@@ -63,6 +61,7 @@ void print_words_val(char** crossword, Wordnode words, int wordnode_count) {
     }
 }
 
+//TODO add a second words array thats in the correct order for print and -check
 void print_solution(char** crossword, int crossword_size) {
     int flag = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
@@ -104,7 +103,7 @@ void print_solution(char** crossword, int crossword_size) {
 }
 
 //TODO optimize
-Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
+Word* map_words(char** crossword, int crossword_size, int* wordnode_count, Map*** bitmaps) {
     int hor_size = 0, ver_size = 0, count = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
@@ -126,89 +125,105 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
     }
     *wordnode_count = count;
 
-    Wordnode words = malloc(count * sizeof(Word));
+    Word* words = malloc(count * sizeof(Word));
     if (words == NULL) /* Malloc error handling */
         error("Error while allocating memory", errno);
 
-    int begin_hor, begin_ver, index = 0;
+    int begin_h, begin_v, index = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
             if (crossword[i][j] != '#') {
-                if (hor_size == 0) {
-                    begin_hor = j;
-                }
+                if (hor_size == 0) begin_h = j;
                 hor_size++;
             }
             if (crossword[i][j] == '#') {
                 if (hor_size > 1) {
                     words[index] = (Word) {
-                        .id = index,
+                        .in_use = 0,
                         .orientation = 0,
                         .constant = i,
-                        .begin = begin_hor,
+                        .begin = begin_h,
                         .end = j - 1,
-                        .size = j - begin_hor,
-                        .insecc = 0,
+                        .size = j - begin_h,
                         .insecs = NULL
                     };
-                    index++;
+                    Map* src = bitmaps[words[index].size - 1][words[index].size];
+                    words[index].map = malloc(sizeof(Map));
+                    words[index].map->size = src->size;
+                    words[index].map->array = malloc(src->size * sizeof(int));
+                    memcpy(words[index].map->array, src->array, src->size * sizeof(int));
+                    sum_bit(words[index].map);
+                    ++index;
                 }
                 hor_size = 0;
             }
             if (crossword[j][i] != '#') {
-                if (ver_size == 0) {
-                    begin_ver = j;
-                }
+                if (ver_size == 0) begin_v = j;
                 ver_size++;
             }
             if (crossword[j][i] == '#') {
                 if (ver_size > 1) {
                     words[index] = (Word) {
-                        .id = index,
+                        .in_use = 0,
                         .orientation = 1,
                         .constant = i,
-                        .begin = begin_ver,
+                        .begin = begin_v,
                         .end = j - 1,
-                        .size = j - begin_ver,
-                        .insecc = 0,
+                        .size = j - begin_v,
                         .insecs = NULL
                     };
-                    index++;
+                    Map* src = bitmaps[words[index].size - 1][words[index].size];
+                    words[index].map = malloc(sizeof(Map));
+                    words[index].map->size = src->size;
+                    words[index].map->array = malloc(src->size * sizeof(int));
+                    memcpy(words[index].map->array, src->array, src->size * sizeof(int));
+                    sum_bit(words[index].map);
+                    ++index;
                 }
                 ver_size = 0;
             }
         }
         if (hor_size > 1) {
             words[index] = (Word) {
-                .id = index,
+                .in_use = 0,
                 .orientation = 0,
                 .constant = i,
-                .begin = begin_hor,
+                .begin = begin_h,
                 .end = crossword_size - 1,
-                .size = crossword_size - begin_hor,
-                .insecc = 0,
+                .size = crossword_size - begin_h,
                 .insecs = NULL
             };
-            index++;
+            Map* src = bitmaps[words[index].size - 1][words[index].size];
+            words[index].map = malloc(sizeof(Map));
+            words[index].map->size = src->size;
+            words[index].map->array = malloc(src->size * sizeof(int));
+            memcpy(words[index].map->array, src->array, src->size * sizeof(int));
+            sum_bit(words[index].map);
+            ++index;
         }
         if (ver_size > 1) {
             words[index] = (Word) {
-                .id = index,
+                .in_use = 0,
                 .orientation = 1,
                 .constant = i,
-                .begin = begin_ver,
+                .begin = begin_v,
                 .end = crossword_size - 1,
-                .size = crossword_size - begin_ver,
-                .insecc = 0,
+                .size = crossword_size - begin_v,
                 .insecs = NULL
             };
-            index++;
+            Map* src = bitmaps[words[index].size - 1][words[index].size];
+            words[index].map = malloc(sizeof(Map));
+            words[index].map->size = src->size;
+            words[index].map->array = malloc(src->size * sizeof(int));
+            memcpy(words[index].map->array, src->array, src->size * sizeof(int));
+            sum_bit(words[index].map);
+            ++index;
         }
         hor_size = 0;
         ver_size = 0;
     }
     for (int i = 0 ; i < (*wordnode_count) ; ++i) {
-        int* buf_insecs = malloc((*wordnode_count) * sizeof(int)); //TODO add checks
+        Word** buf_insecs = calloc((*wordnode_count), sizeof(Word*)); //TODO add checks
         int buf_insecc = 0;
         if (words[i].orientation) {
             for (int j = words[i].begin ; j <= words[i].end ; ++j) {
@@ -220,7 +235,7 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                             if (words[k].orientation) continue;
                             int cord = words[i].constant - 1;
                             if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
-                                buf_insecs[buf_insecc] = words[k].id;
+                                buf_insecs[buf_insecc] = &words[k];
                                 ++buf_insecc;
                                 found = 1;
                                 break;
@@ -235,7 +250,7 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                             if (words[k].orientation) continue;
                             int cord = words[i].constant + 1;
                             if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
-                                buf_insecs[buf_insecc] = words[k].id;
+                                buf_insecs[buf_insecc] = &words[k];
                                 ++buf_insecc;
                                 break;
                             }
@@ -254,7 +269,7 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                             if (!words[k].orientation) continue;
                             int cord = words[i].constant - 1;
                             if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
-                                buf_insecs[buf_insecc] = words[k].id;
+                                buf_insecs[buf_insecc] = &words[k];
                                 ++buf_insecc;
                                 found = 1;
                                 break;
@@ -270,7 +285,7 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                             if (!words[k].orientation) continue;
                             int cord = words[i].constant + 1;
                             if (words[k].constant == j && words[k].begin <= cord && cord <= words[k].end) {
-                                buf_insecs[buf_insecc] = words[k].id;
+                                buf_insecs[buf_insecc] = &words[k];
                                 ++buf_insecc;
                                 break;
                             }
@@ -279,19 +294,19 @@ Wordnode map_words(char** crossword, int crossword_size, int* wordnode_count) {
                 }
             }
         }
-        words[i].insecc = buf_insecc;
-        words[i].insecs = malloc(buf_insecc * sizeof(int));
-        memcpy(words[i].insecs, buf_insecs, buf_insecc * sizeof(int));
+        words[i].insecs = malloc((buf_insecc + 1) * sizeof(Word*));
+        memcpy(words[i].insecs, buf_insecs, (buf_insecc + 1) * sizeof(Word*));
+        free(buf_insecs);
     }
     return words;
 }
 
-void prop_word(int** maps, Wordnode words, int last, int* map_sizes, int wordnode_count) {
-    if (last == wordnode_count - 1) return;
+void prop_word(Word* words, int wordnode_count, int last) {
+    DBGCHECK(last != wordnode_count - 1);
     int index = last;
-    int min = sum_bit(maps[index], map_sizes[words[index].size - 1]);
+    int min = words[index].map->sum;
     for (int i = index + 1 ; i < wordnode_count ; ++i) {
-        int temp = sum_bit(maps[i], map_sizes[words[i].size - 1]);
+        int temp = words[i].map->sum;
         if (temp < min) {
             min = temp;
             index = i;
@@ -300,7 +315,4 @@ void prop_word(int** maps, Wordnode words, int last, int* map_sizes, int wordnod
     Word temp = words[last];
     words[last] = words[index];
     words[index] = temp;
-    int* temp_m = maps[last];
-    maps[last] = maps[index];
-    maps[index] = temp_m;
 }

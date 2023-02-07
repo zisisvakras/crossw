@@ -1,23 +1,31 @@
 #ifndef EXTRATYPES_H_
 #define EXTRATYPES_H_
 
-typedef struct Word* Wordnode;
 typedef struct Word Word;
+typedef struct Map Map;
 typedef char** Dictionary;
-typedef int**** Bitmaps;
 
 //TODO add word size and make changes
 struct Word {
-    int id;
+    int in_use;
     int orientation;
     int constant;
     int begin;
     int end;
     int size;
-    int insecc;
-    int* insecs;
+    Word** insecs;
+    Map* map;
 };
 
+
+struct Map {
+    int* array;
+    int size;
+    int sum;
+};
+
+//TODO find better names maybe
+//TODO find better names maybe
 //TODO find better names maybe
 
 #endif
