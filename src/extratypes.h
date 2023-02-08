@@ -18,6 +18,7 @@ struct Word {
     Map* map;
 };
 
+//TODO enums for horizontal and vertical
 
 struct Map {
     int* array;

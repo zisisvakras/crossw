@@ -7,7 +7,7 @@
 
 extern int errno;
 
-Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** words_count_ret) {
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** words_count_ret, int** multi) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
@@ -62,7 +62,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** word
             error("Error while allocating memory", errno);
 
         strcpy(bigdict[word_size - 1][index], buffer); /* Copy word in buffer to node */
-        dictnode_values[word_size - 1][index] = word_val(buffer);
+        dictnode_values[word_size - 1][index] = word_val(buffer, multi);
 
         index_array[word_size - 1]++;
     }
@@ -77,18 +77,6 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** word
     free(index_array);
     free(buffer);
     return bigdict;
-}
-
-/**
- * @details debug tool
-*/
-void print_dictionary(Dictionary* bigdict, int max_word_size, int* words_count) {
-    for (int i = 0 ; i < max_word_size ; ++i) {
-        printf("words with size: %d\n\n", i + 1);
-        for (int j = 0 ; j < words_count[i] ; ++j) {
-            printf("%s\n", bigdict[i][j]);
-        }
-    }
 }
 
 void free_dictionary(Dictionary* bigdict, int max_word_size, int* words_count) {
@@ -117,7 +105,8 @@ char* find_word(Dictionary dictionary, Word* word) {
     return NULL;
 }
 
-int word_val(char* word) {
+int word_val(char* word, int** multi) {
+    int* smulti = multi[strlen(word) - 1]; // "s"pecific multi
     int value = 0, i = -1;
     int worth['z' + 1] = {
         ['e'] = 26, ['a'] = 25, ['i'] = 24, ['r'] = 23,
@@ -129,7 +118,7 @@ int word_val(char* word) {
         ['j'] = 2,  ['q'] = 1
     };
     while (word[++i]) {
-        value += worth[(int)word[i]];
+        value += worth[(int)word[i]] * smulti[i];
     }
     return value;
 }

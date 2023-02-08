@@ -42,16 +42,36 @@ int main(int argc, char** argv) {
     int max_word_size, crossword_size;
     init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
 
+    /* Multipliers */
+    int** multi = malloc(max_word_size * sizeof(int*));
+    mallerr(multi, errno);
+    for (int i = 0 ; i < max_word_size ; ++i) {
+        multi[i] = calloc((i + 1), sizeof(int));
+        mallerr(multi[i], errno);
+    }
+    
+    /* Map the crossword */
+    int wordnode_count = find_wordnode_count(crossword, crossword_size);
+    Word** words = map_words(crossword, crossword_size, wordnode_count, multi);
+
     /* Initialize dictionaries */
     int* words_count = NULL;
-    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &words_count);
+    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &words_count, multi);
 
     /* Initialize maps */
     Map*** maps = init_maps(bigdict, max_word_size, words_count);
 
-    int wordnode_count = 0;
-    Word** words = map_words(crossword, crossword_size, &wordnode_count, maps);
- 
+    
+    /* Initializing maps for all words */
+    for (int i = 0 ; i < wordnode_count ; ++i) {
+        Map* src = maps[words[i]->size - 1][words[i]->size];
+        words[i]->map = malloc(sizeof(Map));
+        words[i]->map->size = src->size;
+        words[i]->map->array = malloc(src->size * sizeof(int));
+        memcpy(words[i]->map->array, src->array, src->size * sizeof(int));
+        sum_bit(words[i]->map);
+    }
+
     if (check_mode) {
         Word** ord_words = malloc(wordnode_count * sizeof(Word*));
         int ord_i = 0;
@@ -67,6 +87,7 @@ int main(int argc, char** argv) {
         }
         check_crossword(crossword, ord_words, maps, wordnode_count);
         if (draw_mode) draw_crossword(crossword, crossword_size);
+        printf("dict: %s cross: %s max: %d words: %d\n", dictionary_path, crossword_path, max_word_size, wordnode_count);
         return 0;
     }
     //print_dict(bigdict, max_word_size);
@@ -75,6 +96,5 @@ int main(int argc, char** argv) {
     if (draw_mode) draw_crossword(crossword, crossword_size);
     else print_solution(crossword, crossword_size);
     free_dictionary(bigdict, max_word_size, words_count);
-    //printf("dict: %s cross: %s max: %d\n", dictionary_path, crossword_path, max_word_size);
     return 0;
 }
