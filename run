@@ -2,9 +2,12 @@
 
 make > /dev/null
 
-/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/Words.txt -draw
+if [ "x$1" = "x7" ]
+then
+/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Empty7.txt -dict data/MoreWords.txt
+else
+/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/MoreWords.txt | ./target/crossw data/Crossword$1.txt -dict data/MoreWords.txt -check -draw
 #gdb --args ./target/crossw data/Crossword$1.txt -dict data/Words.txt
-#valgrind ./target/crossw data/Crossword$1.txt -dict data/Words.txt
-#/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Empty7.txt -dict data/Words.txt
+fi
 
 make clean > /dev/null

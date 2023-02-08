@@ -2,6 +2,7 @@
 #define EXTRATYPES_H_
 
 typedef struct Word Word;
+typedef struct Intersection Intersection;
 typedef struct Map Map;
 typedef char** Dictionary;
 
@@ -13,7 +14,7 @@ struct Word {
     int begin;
     int end;
     int size;
-    Word** insecs;
+    Intersection* insecs;
     Map* map;
 };
 
@@ -22,6 +23,13 @@ struct Map {
     int* array;
     int size;
     int sum;
+};
+
+struct Intersection {
+    Word* word;
+    int x;
+    int y;
+    int pos;
 };
 
 //TODO find better names maybe

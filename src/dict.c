@@ -102,9 +102,9 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, int* words_count) {
 }
 
 //TODO fix 32 and make it sizeof(int) * 8
-char* find_word(Dictionary dictionary, Word word) {
-    int* array = word.map->array;
-    int size = word.map->size;
+char* find_word(Dictionary dictionary, Word* word) {
+    int* array = word->map->array;
+    int size = word->map->size;
     for (int i = 0 ; i < size ; ++i) {
         if (array[i] == 0) continue;
         for (int j = 0 ; j < 32 ; ++j) {
