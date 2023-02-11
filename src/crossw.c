@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "crossu.h"
 #include "extratypes.h"
 #include "extrafuns.h"
 
@@ -75,30 +74,33 @@ int main(int argc, char** argv) {
         sum_bit(grid_words[i]->map);
     }
 
+    /* Making an array of words thats in the proper order for check and print */
+    Word** ord_words = malloc(grid_count * sizeof(Word*));
+    mallerr(ord_words, errno);
+    int ord_i = 0;
+    for (int i = 0 ; i < grid_count ; ++i) {
+        if (!(grid_words[i]->orientation)) {
+            ord_words[ord_i++] = grid_words[i];
+        }
+    }
+    for (int i = 0 ; i < grid_count ; ++i) {
+        if (grid_words[i]->orientation) {
+            ord_words[ord_i++] = grid_words[i];
+        }
+    }
+
+    /* Program behavior based on flags */
     if (check_mode) {
-        /* Making an array of words thats in the proper order for check */
-        Word** ord_words = malloc(grid_count * sizeof(Word*));
-        mallerr(ord_words, errno);
-        int ord_i = 0;
-        for (int i = 0 ; i < grid_count ; ++i) {
-            if (!(grid_words[i]->orientation)) {
-                ord_words[ord_i++] = grid_words[i];
-            }
-        }
-        for (int i = 0 ; i < grid_count ; ++i) {
-            if (grid_words[i]->orientation) {
-                ord_words[ord_i++] = grid_words[i];
-            }
-        }
         check_crossword(crossword, ord_words, dict_maps, grid_count);
         if (draw_mode) draw_crossword(crossword, crossword_size);
+        printf("dict: %s cross: %s max: %d words: %d\n", dictionary_path, crossword_path, max_word_size, grid_count); //FIXME remove
     }
     else {
         solve_crossword(&crossword, crossword_size, bigdict, grid_words, grid_count, dict_maps);
         if (draw_mode) draw_crossword(crossword, crossword_size);
-        else print_solution(crossword, crossword_size);
+        else print_solution(crossword, ord_words, grid_count);
     }
-    if (check_mode) printf("dict: %s cross: %s max: %d words: %d\n", dictionary_path, crossword_path, max_word_size, grid_count);
+
     /* Cleanup */
     free_dictionary(bigdict, max_word_size, dict_count);
     free(dict_count);

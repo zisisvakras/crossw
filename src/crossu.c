@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "crossu.h"
 #include "extratypes.h"
 #include "extrafuns.h"
 

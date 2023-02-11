@@ -20,44 +20,15 @@ void write_word(char** crossword, Word* node, char* word) {
     }
 }
 
-//TODO add a second words array thats in the correct order for print and -check
-void print_solution(char** crossword, int crossword_size) {
-    int flag = 0;
-    for (int i = 0 ; i < crossword_size ; i++) {
-        for (int j = 0 ; j < crossword_size ; j++) {
-            if (crossword[i][j] != '#') {
-                if (!flag) {
-                    if (j == crossword_size - 1) continue;
-                    if (crossword[i][j + 1] != '#') flag = 1;
-                    else continue;
-                }
-                putchar(crossword[i][j]);
-            }
-            if (crossword[i][j] == '#') {
-                if (flag) putchar('\n');
-                flag = 0;
-            }
+//TODO change all ++ to pre
+void print_solution(char** crossword, Word** ord_words, int count) {
+    for (int i = 0 ; i < count ; ++i) {
+        int c = ord_words[i]->constant;
+        int f = ord_words[i]->orientation;
+        for (int j = ord_words[i]->begin ; j <= ord_words[i]->end ; ++j) {
+            putchar(f ? crossword[j][c] : crossword[c][j]); /* Choose cell depending on orientation */
         }
-        if (flag) putchar('\n');
-        flag = 0;
-    }
-    for (int i = 0 ; i < crossword_size ; i++) {
-        for (int j = 0 ; j < crossword_size ; j++) {
-            if (crossword[j][i] != '#') {
-                if (!flag) {
-                    if (j == crossword_size - 1) continue;
-                    if (crossword[j + 1][i] != '#') flag = 1;
-                    else continue;
-                }
-                putchar(crossword[j][i]);
-            }
-            if (crossword[j][i] == '#') {
-                if (flag) putchar('\n');
-                flag = 0;
-            }
-        }
-        if (flag) putchar('\n');
-        flag = 0;
+        putchar('\n');
     }
 }
 
@@ -255,22 +226,36 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** 
             }
         }
         grid_words[i]->insecs = malloc((buf_insecc + 1) * sizeof(Intersection));
+        grid_words[i]->insecc = buf_insecc;
         memcpy(grid_words[i]->insecs, buf_insecs, (buf_insecc + 1) * sizeof(Intersection));
     }
     free(buf_insecs);
     return grid_words;
 }
 
-void prop_word(Word** words, int wordnode_count, int last) { //2nd criteria insecs
+void prop_word(Word** words, int wordnode_count, int last) {
     int index = last;
     int min = words[index]->map->sum;
+    int insec = words[index]->insecc;
+    /**
+     * Looping through all words to find the one with lowest possibilities
+     * as a 2nd criteria we are also looking for the number of interesections
+     * note for the 2nd one: this might not be needed we are not sure ¯\_(ツ)_/¯
+     */
     for (int i = index + 1 ; i < wordnode_count ; ++i) {
         int temp = words[i]->map->sum;
         if (temp < min) {
             min = temp;
+            insec = words[i]->insecc;
+            index = i;
+        }
+        else if (temp == min && words[i]->insecc > insec) {
+            min = temp;
+            insec = words[i]->insecc;
             index = i;
         }
     }
+    /* Swapping the pointers */
     Word* temp = words[last];
     words[last] = words[index];
     words[index] = temp;

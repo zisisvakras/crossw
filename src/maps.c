@@ -49,8 +49,8 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
         for (int j = 0 ; j < words_count[i] ; ++j) { /* Looping through every word in dict */
             char* word = bigdict[i][j];
             for (int k = 0 ; word[k] ; ++k) { /* Every letter in word */
-                /* Throw 1 to the appropriate bitmap */
                 /**
+                 * Throw 1 to the appropriate bitmap.
                  * j >> 5 calculates the 32 bit int that the 1 will put in.
                  * j & 0x1F (j mod 31) calculates the position in the int.
                  * We shift the bit to the position and we put it in with |.

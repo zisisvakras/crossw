@@ -14,6 +14,7 @@ struct Word {
     int begin;
     int end;
     int size;
+    int insecc;
     Intersection* insecs;
     Map* map;
 };
