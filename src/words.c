@@ -61,21 +61,25 @@ void print_solution(char** crossword, int crossword_size) {
     }
 }
 
-int find_wordnode_count(char** crossword, int crossword_size) {
+/* Count words on the crossword */
+int count_words_on_grid(char** crossword, int crossword_size) {
     int hor_size = 0, ver_size = 0, count = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
+            /* Horizontal */
             if (crossword[i][j] != '#') hor_size++;
             if (crossword[i][j] == '#') {
-                if (hor_size > 1) count++;
+                if (hor_size > 1) count++; /* Words with size 1 don't count */
                 hor_size = 0;
             }
+            /* Vertical */
             if (crossword[j][i] != '#') ver_size++;
             if (crossword[j][i] == '#') {
                 if (ver_size > 1) count++;
                 ver_size = 0;
             }
         }
+        /* We need to check if some words reach the border without finding # */
         if (hor_size > 1) count++;
         if (ver_size > 1) count++;
         hor_size = 0;
@@ -84,16 +88,16 @@ int find_wordnode_count(char** crossword, int crossword_size) {
     return count;
 }
 
-//TODO optimize //TODO add mallerr to everything
-Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
-    Word** words = malloc(count * sizeof(Word*));
-    mallerr(words, errno);
+Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** multi) {
+    /* Initializing grid_words */
+    Word** grid_words = malloc(count * sizeof(Word*));
+    mallerr(grid_words, errno);
     for (int i = 0 ; i < count ; ++i) {
-        words[i] = malloc(sizeof(Word));
-        mallerr(words[i], errno);
-        memset(words[i], 0, sizeof(Word)); /* Setting most default values to 0 */
+        grid_words[i] = calloc(1, sizeof(Word)); /* Setting most default values to 0 */
+        mallerr(grid_words[i], errno);
     }
 
+    /* Mapping the grid */
     int hor_size = 0, ver_size = 0;
     int begin_h = 0, begin_v = 0, index = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
@@ -104,7 +108,7 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
             }
             if (crossword[i][j] == '#') {
                 if (hor_size > 1) {
-                    *words[index++] = (Word) {
+                    *grid_words[index++] = (Word) {
                         .orientation = 0,
                         .constant = i,
                         .begin = begin_h,
@@ -120,7 +124,7 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
             }
             if (crossword[j][i] == '#') {
                 if (ver_size > 1) {
-                    *words[index++] = (Word) {
+                    *grid_words[index++] = (Word) {
                         .orientation = 1,
                         .constant = i,
                         .begin = begin_v,
@@ -132,7 +136,7 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
             }
         }
         if (hor_size > 1) {
-            *words[index++] = (Word) {
+            *grid_words[index++] = (Word) {
                 .orientation = 0,
                 .constant = i,
                 .begin = begin_h,
@@ -141,7 +145,7 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
             };
         }
         if (ver_size > 1) {
-            *words[index++] = (Word) {
+            *grid_words[index++] = (Word) {
                 .orientation = 1,
                 .constant = i,
                 .begin = begin_v,
@@ -152,46 +156,52 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
         hor_size = 0;
         ver_size = 0;
     }
-    for (int i = 0 ; i < count ; ++i) {
-        Intersection* buf_insecs = calloc(count, sizeof(Intersection)); //TODO add checks
-        int buf_insecc = 0;
-        if (words[i]->orientation) {
-            for (int j = words[i]->begin ; j <= words[i]->end ; ++j) {
+
+    /* Finding the intersections */
+    Intersection* buf_insecs = malloc(count * sizeof(Intersection));
+    mallerr(buf_insecs, errno);
+    int buf_insecc = 0;
+    for (int i = 0 ; i < count ; ++i) { //TODO optimize
+        /* Reseting buf_insecs */
+        memset(buf_insecs, 0, count * sizeof(Intersection));
+        buf_insecc = 0;
+        if (grid_words[i]->orientation) {
+            for (int j = grid_words[i]->begin ; j <= grid_words[i]->end ; ++j) {
                 int found = 0;
-                if (words[i]->constant != 0) {
-                    char ch = crossword[j][words[i]->constant - 1];
+                if (grid_words[i]->constant != 0) {
+                    char ch = crossword[j][grid_words[i]->constant - 1];
                     if (ch != '#') {
                         for (int k = 0 ; k < count ; ++k) {
-                            if (words[k]->orientation) continue;
-                            int cord = words[i]->constant - 1;
-                            if (words[k]->constant == j && words[k]->begin <= cord && cord <= words[k]->end) {
+                            if (grid_words[k]->orientation) continue;
+                            int cord = grid_words[i]->constant - 1;
+                            if (grid_words[k]->constant == j && grid_words[k]->begin <= cord && cord <= grid_words[k]->end) {
                                 buf_insecs[buf_insecc++] = (Intersection) {
-                                    .word = &(*words[k]),
+                                    .word = &(*grid_words[k]),
                                     .x = j,
-                                    .y = words[i]->constant,
-                                    .pos = words[i]->constant - words[k]->begin
+                                    .y = grid_words[i]->constant,
+                                    .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
-                                ++multi[words[i]->size - 1][j - words[i]->begin];
+                                ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
                                 found = 1;
                                 break;
                             }
                         }
                     }
                 }
-                if (!found && words[i]->constant != crossword_size - 1) {
-                    char ch = crossword[j][words[i]->constant + 1];
+                if (!found && grid_words[i]->constant != crossword_size - 1) {
+                    char ch = crossword[j][grid_words[i]->constant + 1];
                     if (ch != '#') {
                         for (int k = 0 ; k < count ; ++k) {
-                            if (words[k]->orientation) continue;
-                            int cord = words[i]->constant + 1;
-                            if (words[k]->constant == j && words[k]->begin <= cord && cord <= words[k]->end) {
+                            if (grid_words[k]->orientation) continue;
+                            int cord = grid_words[i]->constant + 1;
+                            if (grid_words[k]->constant == j && grid_words[k]->begin <= cord && cord <= grid_words[k]->end) {
                                 buf_insecs[buf_insecc++] = (Intersection) {
-                                    .word = &(*words[k]),
+                                    .word = &(*grid_words[k]),
                                     .x = j,
-                                    .y = words[i]->constant,
-                                    .pos = words[i]->constant - words[k]->begin
+                                    .y = grid_words[i]->constant,
+                                    .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
-                                ++multi[words[i]->size - 1][j - words[i]->begin];
+                                ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
                                 break;
                             }
                         }
@@ -200,43 +210,43 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
             }
         }
         else {
-            for (int j = words[i]->begin ; j <= words[i]->end ; ++j) {
+            for (int j = grid_words[i]->begin ; j <= grid_words[i]->end ; ++j) {
                 int found = 0;
-                if (words[i]->constant != 0) {
-                    char ch = crossword[words[i]->constant - 1][j];
+                if (grid_words[i]->constant != 0) {
+                    char ch = crossword[grid_words[i]->constant - 1][j];
                     if (ch != '#') {
                         for (int k = 0 ; k < count ; ++k) {
-                            if (!words[k]->orientation) continue;
-                            int cord = words[i]->constant - 1;
-                            if (words[k]->constant == j && words[k]->begin <= cord && cord <= words[k]->end) {
+                            if (!grid_words[k]->orientation) continue;
+                            int cord = grid_words[i]->constant - 1;
+                            if (grid_words[k]->constant == j && grid_words[k]->begin <= cord && cord <= grid_words[k]->end) {
                                 buf_insecs[buf_insecc++] = (Intersection) {
-                                    .word = &(*words[k]),
-                                    .x = words[i]->constant,
+                                    .word = &(*grid_words[k]),
+                                    .x = grid_words[i]->constant,
                                     .y = j,
-                                    .pos = words[i]->constant - words[k]->begin
+                                    .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
-                                ++multi[words[i]->size - 1][j - words[i]->begin];
+                                ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
                                 found = 1;
                                 break;
                             }
                         }
                     }
                 }
-                if (!found && words[i]->constant != crossword_size - 1) {
-                    char ch = crossword[words[i]->constant + 1][j];
+                if (!found && grid_words[i]->constant != crossword_size - 1) {
+                    char ch = crossword[grid_words[i]->constant + 1][j];
                     if (ch != '#') {
                         // Check which word has letter
                         for (int k = 0 ; k < count ; ++k) {
-                            if (!words[k]->orientation) continue;
-                            int cord = words[i]->constant + 1;
-                            if (words[k]->constant == j && words[k]->begin <= cord && cord <= words[k]->end) {
+                            if (!grid_words[k]->orientation) continue;
+                            int cord = grid_words[i]->constant + 1;
+                            if (grid_words[k]->constant == j && grid_words[k]->begin <= cord && cord <= grid_words[k]->end) {
                                buf_insecs[buf_insecc++] = (Intersection) {
-                                    .word = &(*words[k]),
-                                    .x = words[i]->constant,
+                                    .word = &(*grid_words[k]),
+                                    .x = grid_words[i]->constant,
                                     .y = j,
-                                    .pos = words[i]->constant - words[k]->begin
+                                    .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
-                                ++multi[words[i]->size - 1][j - words[i]->begin];
+                                ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
                                 break;
                             }
                         }
@@ -244,11 +254,11 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
                 }
             }
         }
-        words[i]->insecs = malloc((buf_insecc + 1) * sizeof(Intersection));
-        memcpy(words[i]->insecs, buf_insecs, (buf_insecc + 1) * sizeof(Intersection));
-        free(buf_insecs);
+        grid_words[i]->insecs = malloc((buf_insecc + 1) * sizeof(Intersection));
+        memcpy(grid_words[i]->insecs, buf_insecs, (buf_insecc + 1) * sizeof(Intersection));
     }
-    return words;
+    free(buf_insecs);
+    return grid_words;
 }
 
 void prop_word(Word** words, int wordnode_count, int last) { //2nd criteria insecs

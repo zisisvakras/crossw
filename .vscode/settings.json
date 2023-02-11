@@ -10,6 +10,7 @@
         "unordered_set": "c",
         "vector": "c",
         "stdlib.h": "c",
-        "extratypes.h": "c"
+        "extratypes.h": "c",
+        "*.tcc": "c"
     }
 }
