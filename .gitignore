@@ -3,6 +3,7 @@ out
 hashthings.c
 crossw
 relic.c
+.vscode/*
 
 # Prerequisites
 *.d

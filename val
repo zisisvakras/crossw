@@ -2,6 +2,6 @@
 
 make > /dev/null
 
-valgrind ./target/crossw data/Crossword$1.txt -dict data/Words.txt
+valgrind ./target/crossw data/Crossword$1.txt -dict data/EvenMoreWords.txt
 
 make clean > /dev/null

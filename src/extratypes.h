@@ -15,6 +15,8 @@ struct Word {
     int end;
     int size;
     int insecc;
+    Map** pre_maps;
+    Dictionary dict;
     Intersection* insecs;
     Map* map;
 };
@@ -32,6 +34,8 @@ struct Intersection {
     int x;
     int y;
     int pos;
+    int len;
+    int pos_local;
 };
 
 //TODO find better names maybe

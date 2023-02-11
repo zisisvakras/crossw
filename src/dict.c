@@ -7,7 +7,7 @@
 
 extern int errno;
 
-Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict_count_ret, int** multi) {
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict_count_ret, int** multi, int**** worth_ret) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
@@ -21,12 +21,56 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
     int* dict_count = calloc(max_word_size, sizeof(int));
     mallerr(dict_count, errno);
 
+    //TODO ADD COMMENT HERE AND MALLERR
+    int*** worth = malloc(max_word_size * sizeof(int**));
+    for (int i = 0 ; i < max_word_size ; ++i) {
+        worth[i] = malloc((i + 1) * sizeof(int*));
+        for (int j = 0 ; j < i + 1 ; ++j) {
+            worth[i][j] = calloc(256, sizeof(int));
+        }
+    }
+
     /* Counting the words in dict file */
     while (fscanf(dictionary_file, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue;
+        int i = -1;
+        while (buffer[++i]) {
+            ++worth[word_size - 1][i][(int)buffer[i]];
+        }
         dict_count[word_size - 1]++;
     }
+
+    /* Sorting the worth and normalize the values */
+    int marker[256];
+    int to_sort = 256;
+    memset(marker, 0, 256 * sizeof(int));
+    for (int i = 0 ; i < max_word_size ; ++i) {
+        for (int j = 0 ; j < i + 1 ; ++j) {
+            for (int k = 0 ; k < 256 ; ++k) {
+                if (worth[i][j][k] == 0) {
+                    marker[k] = 1;
+                    --to_sort;
+                }
+            }
+            while (to_sort--) {
+                int max = 0;
+                int index = 0;
+                for (int k = 0 ; k < 256 ; ++k) {
+                    if (marker[k]) continue;
+                    if (worth[i][j][k] > max) {
+                        index = k;
+                        max = worth[i][j][k];
+                    }
+                }
+                marker[index] = 1;
+                worth[i][j][index] = to_sort;
+            }
+            to_sort = 256;
+            memset(marker, 0, 256 * sizeof(int));
+        }
+    }
+    *worth_ret = worth;
 
     //TODO remove useless allocated dicts
     /* Allocate enough arrays for all word sizes that we may need */
@@ -91,7 +135,8 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
 
 //TODO optimize
 //TODO fix 32 and make it sizeof(int) * 8
-char* find_word(Dictionary dictionary, Word* word) {
+char* find_word(Word* word) {
+    Dictionary dictionary = word->dict;
     int* array = word->map->array;
     int size = word->map->size;
     for (int i = 0 ; i < size ; ++i) {

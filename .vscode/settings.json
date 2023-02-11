@@ -1,17 +1,13 @@
 {
     "files.associations": {
+        "optional": "c",
+        "ratio": "c",
+        "system_error": "c",
         "array": "c",
-        "string_view": "c",
-        "initializer_list": "c",
-        "deque": "c",
-        "list": "c",
-        "string": "c",
-        "unordered_map": "c",
-        "unordered_set": "c",
-        "vector": "c",
-        "stdlib.h": "c",
-        "extratypes.h": "c",
-        "*.tcc": "c",
-        "stdio.h": "c"
+        "functional": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "*.tcc": "c"
     }
 }

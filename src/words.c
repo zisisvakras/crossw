@@ -150,6 +150,8 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** 
                                     .word = &(*grid_words[k]),
                                     .x = j,
                                     .y = grid_words[i]->constant,
+                                    .len = grid_words[k]->size,
+                                    .pos_local = j - grid_words[i]->begin,
                                     .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
                                 ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
@@ -170,6 +172,8 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** 
                                     .word = &(*grid_words[k]),
                                     .x = j,
                                     .y = grid_words[i]->constant,
+                                    .len = grid_words[k]->size,
+                                    .pos_local = j - grid_words[i]->begin,
                                     .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
                                 ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
@@ -194,6 +198,8 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** 
                                     .word = &(*grid_words[k]),
                                     .x = grid_words[i]->constant,
                                     .y = j,
+                                    .len = grid_words[k]->size,
+                                    .pos_local = j - grid_words[i]->begin,
                                     .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
                                 ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
@@ -215,6 +221,8 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** 
                                     .word = &(*grid_words[k]),
                                     .x = grid_words[i]->constant,
                                     .y = j,
+                                    .len = grid_words[k]->size,
+                                    .pos_local = j - grid_words[i]->begin,
                                     .pos = grid_words[i]->constant - grid_words[k]->begin
                                 };
                                 ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];

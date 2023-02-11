@@ -25,14 +25,14 @@
 /* crossu.c functions */
 void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_size_ret, int* max_word_size_ret);
 void draw_crossword(char** crossword, int crossword_size);
-void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Word** words, int wordnode_count, Map*** maps);
+void solve_crossword(char*** crossword, int crossword_size, Word** words, int wordnode_count);
 void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_count);
 char*** init_crosswords(char** crossword, int crossword_size, int wordnode_count);
 
 /* dict.c functions */
-Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** words_count_ret, int** multi);
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** words_count_ret, int** multi, int**** worth_ret);
 void free_dictionary(Dictionary* bigdict, int max_word_size, int* words_count);
-char* find_word(Dictionary dictionary, Word* word);
+char* find_word(Word* word);
 int word_val(char* word, int** multi);
 void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int last);
 
@@ -45,7 +45,7 @@ void print_solution(char** crossword, Word** ord_words, int count);
 
 /* maps.c functions */
 Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count);
-void update_map(char** crossword, Word* word, Map*** maps);
+void update_map(char** crossword, Word* word);
 void join_map(Map* map1, Map* map2);
 int sum_bit(Map* map);
 

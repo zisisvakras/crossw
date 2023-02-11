@@ -140,7 +140,7 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
 
 //TODO CHECK MAPS FOR SHIFT (MAYBE USE UNSIGNED)
 //TODO ΜΑΚΕ AN ARRAY SIZE WORDNODE_COUNT THAT HOLDS ALL WORD POINTERS THAT NEED UPDATE
-void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Word** words, int wordnode_count, Map*** bitmaps) {
+void solve_crossword(char*** crossword, int crossword_size, Word** words, int wordnode_count) {
     /* Initilizing the crossword stack */
     char*** crosswords = init_crosswords(*crossword, crossword_size, wordnode_count);
     int index = 0, backtrack = 0;
@@ -148,7 +148,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
     while (index < wordnode_count) {
         /* Find word in bigdict */
         char* word_found = NULL;
-        if (backtrack || (word_found = find_word(bigdict[words[index]->size - 1], words[index])) == NULL) {
+        if (backtrack || (word_found = find_word(words[index])) == NULL) {
             if (index == 0) { /* Cannot backtrack from zero */
                 fprintf(stderr, "Couldn\'t solve crossword ;-;\n");
                 exit(1);
@@ -157,7 +157,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             for (int i = 0 ; words[index - 1]->insecs[i].word ; ++i) {
                 Word* word = words[index - 1]->insecs[i].word;
                 if (word->in_use == 0) {
-                    update_map(crosswords[index - 1], word, bitmaps);
+                    update_map(crosswords[index - 1], word);
                     sum_bit(word->map);
                 }
             }
@@ -177,7 +177,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             Intersection insec = words[index]->insecs[i];
             Word* word = insec.word;
             if (word->in_use == 0) {
-                join_map(word->map, &bitmaps[word->size - 1][insec.pos][crosswords[index + 1][insec.x][insec.y] - 'a']);
+                join_map(word->map, &word->pre_maps[insec.pos][(int)crosswords[index + 1][insec.x][insec.y]]);
                 /* If some map turns out to be 0 do early backtrack (pruning the domain) */
                 if (sum_bit(word->map) == 0) {
                     backtrack = 1;

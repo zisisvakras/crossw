@@ -80,22 +80,23 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
     return maps;
 }
 //FIXME change after new word struct
-void update_map(char** crossword, Word* word, Map*** maps) {
+void update_map(char** crossword, Word* word) {
+    Map** maps = word->pre_maps;
     Map* map = word->map;
-    DBGCHECK(map->size == maps[word->size - 1][word->size]->size);
-    memcpy(map->array, maps[word->size - 1][word->size]->array, map->size * sizeof(int));
+    DBGCHECK(map->size == maps[word->size]->size);
+    memcpy(map->array, maps[word->size]->array, map->size * sizeof(int));
     if (word->orientation) {
         for (int i = word->begin ; i <= word->end ; ++i) {
             char ch = crossword[i][word->constant];
             if (ch == '-') continue;
-            join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
+            join_map(map, maps[i - word->begin] + ch);
         }
     }
     else {
         for (int i = word->begin ; i <= word->end ; ++i) {
             char ch = crossword[word->constant][i];
             if (ch == '-') continue;
-            join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
+            join_map(map, maps[i - word->begin] + ch);
         }
     }
 }
