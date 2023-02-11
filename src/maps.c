@@ -78,23 +78,6 @@ Map*** init_maps(Dictionary* bigdict, int max_word_size, int* words_count) {
     free(map_sizes);
     return maps;
 }
-
-/**
- * @details debug tool
-*/
-void print_map(Map* map) {
-    int* array = map->array;
-    int size = map->size;
-    int sum = map->sum;
-    printf("size: %d, sum: %d\n", size, sum);
-    for (int i = 0 ; i < size ; i+=8) {
-        for (int j = 0 ; j < 8 ; ++j) {
-            if(i + j < size) printf("%08x ", array[i + j]);
-        }
-        putchar('\n');
-    }
-}
-
 //FIXME change after new word struct
 void update_map(char** crossword, Word* word, Map*** maps) {
     Map* map = word->map;
@@ -103,38 +86,37 @@ void update_map(char** crossword, Word* word, Map*** maps) {
     if (word->orientation) {
         for (int i = word->begin ; i <= word->end ; ++i) {
             char ch = crossword[i][word->constant];
-            if (ch != '-') {
-                join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
-            }
+            if (ch == '-') continue;
+            join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
         }
     }
     else {
         for (int i = word->begin ; i <= word->end ; ++i) {
             char ch = crossword[word->constant][i];
-            if (ch != '-') {
-                join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
-            }
+            if (ch == '-') continue;
+            join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
         }
     }
 }
 
 void join_map(Map* map1, Map* map2) {
     DBGCHECK(map1->size == map2->size); // debug tools
-    int* array1 = map1->array;
-    int* array2 = map2->array;
+    register int* array1 = map1->array;
+    register int* array2 = map2->array;
     int size = map1->size;
-    for (int i = 0 ; i < size ; ++i)
+    for (register int i = 0 ; i < size ; ++i) {
         array1[i] &= array2[i];
+    }
 }
 
 /* Brian Kernighan’s Algorithm */
 int sum_bit(Map* map) {
     DBGCHECK(map != NULL); // debug tools
-    int* array = map->array;
+    register int* array = map->array;
     int size = map->size;
-    int sum = 0;
-    for (int i = 0 ; i < size ; ++i) {
-        int n = array[i];
+    register int sum = 0;
+    for (register int i = 0 ; i < size ; ++i) {
+        register int n = array[i];
         if (n == 0) continue;
         while (n) {
             n &= (n - 1);

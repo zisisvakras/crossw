@@ -48,11 +48,11 @@ void print_solution(char** crossword, int crossword_size);
 Map*** init_maps(Dictionary* bigdict, int max_word_size, int* words_count);
 void update_map(char** crossword, Word* word, Map*** maps);
 void join_map(Map* map1, Map* map2);
-void print_map(Map* map);
 int sum_bit(Map* map);
 
 /* debug.c funcs */
 void print_words(Word** words, int wordnode_count, char** crossword);
 void print_dictionary(Dictionary* bigdict, int max_word_size, int* words_count);
+void print_map(Map* map);
 
 #endif

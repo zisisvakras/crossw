@@ -251,7 +251,7 @@ Word** map_words(char** crossword, int crossword_size, int count, int** multi) {
     return words;
 }
 
-void prop_word(Word** words, int wordnode_count, int last) {
+void prop_word(Word** words, int wordnode_count, int last) { //2nd criteria insecs
     int index = last;
     int min = words[index]->map->sum;
     for (int i = index + 1 ; i < wordnode_count ; ++i) {

@@ -5,6 +5,8 @@
 #include "extratypes.h"
 #include "extrafuns.h"
 
+
+//TODO check for negative user input
 /**
  * @details debug tool
 */
@@ -53,5 +55,21 @@ void print_dictionary(Dictionary* bigdict, int max_word_size, int* words_count) 
         for (int j = 0 ; j < words_count[i] ; ++j) {
             printf("%s\n", bigdict[i][j]);
         }
+    }
+}
+
+/**
+ * @details debug tool
+*/
+void print_map(Map* map) {
+    int* array = map->array;
+    int size = map->size;
+    int sum = map->sum;
+    printf("size: %d, sum: %d\n", size, sum);
+    for (int i = 0 ; i < size ; i+=8) {
+        for (int j = 0 ; j < 8 ; ++j) {
+            if(i + j < size) printf("%08x ", array[i + j]);
+        }
+        putchar('\n');
     }
 }
