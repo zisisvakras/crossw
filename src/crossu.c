@@ -193,6 +193,10 @@ void solve_crossword(char*** crossword, int crossword_size, Word** words, int wo
             Intersection insec = words[index]->insecs[i];
             Word* word = insec.word;
             if (word->in_use == 0) {
+                map_stack[map_stack_index].sum = word->map->sum;
+                map_stack[map_stack_index].size = word->map->size;
+                memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(int));
+                ++map_stack_index;
                 join_map(word->map, &word->pre_maps[insec.pos][(int)crosswords[index + 1][insec.x][insec.y]]);
                 /* If some map turns out to be 0 do early backtrack (pruning the domain) */
                 if (sum_bit(word->map) == 0) {
