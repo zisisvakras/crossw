@@ -139,31 +139,48 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
 }
 
 //TODO CHECK MAPS FOR SHIFT (MAYBE USE UNSIGNED)
-//TODO ΜΑΚΕ AN ARRAY SIZE WORDNODE_COUNT THAT HOLDS ALL WORD POINTERS THAT NEED UPDATE
 void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Word** words, int wordnode_count, Map*** bitmaps) {
+    
+    int max_map_size = 0;
+    int map_stack_size = 0;
+    for (int i = 0 ; i < wordnode_count ; ++i) {
+        map_stack_size += words[i]->insecc;
+        if (words[i]->map->size > max_map_size) {
+            max_map_size = words[i]->map->size;
+        }
+    }
+
+    Map* map_stack = calloc(map_stack_size, sizeof(Map));
+    for (int i = 0 ; i < map_stack_size ; ++i) {
+        map_stack[i].array = malloc(max_map_size * sizeof(int));
+    }
+    int map_stack_index = 0;
+    
     /* Initilizing the crossword stack */
     char*** crosswords = init_crosswords(*crossword, crossword_size, wordnode_count);
     int index = 0, backtrack = 0;
     prop_word(words, wordnode_count, index);
     while (index < wordnode_count) {
+        backtrack = 0;
         /* Find word in bigdict */
         char* word_found = NULL;
-        if (backtrack || (word_found = find_word(bigdict[words[index]->size - 1], words[index])) == NULL) {
+        if ((word_found = find_word(bigdict[words[index]->size - 1], words[index])) == NULL) {
             if (index == 0) { /* Cannot backtrack from zero */
                 fprintf(stderr, "Couldn\'t solve crossword ;-;\n");
                 exit(1);
             }
             /* Fixing back all maps that got ruined from the word put */
-            for (int i = 0 ; words[index - 1]->insecs[i].word ; ++i) {
+            for (int i = words[index - 1]->insecc - 1 ; i >= 0 ; --i) {
                 Word* word = words[index - 1]->insecs[i].word;
                 if (word->in_use == 0) {
-                    update_map(crosswords[index - 1], word, bitmaps);
-                    sum_bit(word->map);
+                    --map_stack_index;
+                    DBGCHECK(word->map->size == map_stack[map_stack_index].size);
+                    word->map->sum = map_stack[map_stack_index].sum;
+                    memcpy(word->map->array, map_stack[map_stack_index].array, word->map->size * sizeof(int));
                 }
             }
             words[index - 1]->in_use = 0;
             --index;
-            backtrack = 0;
             continue;
         }
         /* Copying previous state before we write anything */
@@ -177,9 +194,24 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             Intersection insec = words[index]->insecs[i];
             Word* word = insec.word;
             if (word->in_use == 0) {
+                map_stack[map_stack_index].sum = word->map->sum;
+                map_stack[map_stack_index].size = word->map->size;
+                memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(int));
+                ++map_stack_index;
                 join_map(word->map, &bitmaps[word->size - 1][insec.pos][crosswords[index + 1][insec.x][insec.y] - 'a']);
                 /* If some map turns out to be 0 do early backtrack (pruning the domain) */
                 if (sum_bit(word->map) == 0) {
+                    for (int j = i ; j >= 0 ; --j) {
+                        Word* word_b = words[index]->insecs[j].word;
+                        if (word_b->in_use == 0) {
+                            --map_stack_index;
+                            DBGCHECK(word_b->map->size == map_stack[map_stack_index].size);
+                            word_b->map->sum = map_stack[map_stack_index].sum;
+                            memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
+                        }
+                    }
+                    words[index]->in_use = 0;
+                    --index;
                     backtrack = 1;
                     break;
                 }

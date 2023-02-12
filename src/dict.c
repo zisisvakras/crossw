@@ -99,6 +99,7 @@ char* find_word(Dictionary dictionary, Word* word) {
         for (int j = 0 ; j < 32 ; ++j) {
             if ((array[i] >> j) & 1) {
                 array[i] ^= 1 << j;
+                --word->map->sum;
                 return dictionary[(i << 5) | j];
             }
         }
