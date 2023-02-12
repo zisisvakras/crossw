@@ -42,34 +42,34 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
     }
 
     /* Sorting the worth and normalize the values */
-    int marker[256];
-    int to_sort = 256;
-    memset(marker, 0, 256 * sizeof(int));
-    for (int i = 0 ; i < max_word_size ; ++i) {
-        for (int j = 0 ; j < i + 1 ; ++j) {
-            for (int k = 0 ; k < 256 ; ++k) {
-                if (worth[i][j][k] == 0) {
-                    marker[k] = 1;
-                    --to_sort;
-                }
-            }
-            while (to_sort--) {
-                int max = 0;
-                int index = 0;
-                for (int k = 0 ; k < 256 ; ++k) {
-                    if (marker[k]) continue;
-                    if (worth[i][j][k] > max) {
-                        index = k;
-                        max = worth[i][j][k];
-                    }
-                }
-                marker[index] = 1;
-                worth[i][j][index] = to_sort;
-            }
-            to_sort = 256;
-            memset(marker, 0, 256 * sizeof(int));
-        }
-    }
+    // int marker[256];
+    // int to_sort = 256;
+    // memset(marker, 0, 256 * sizeof(int));
+    // for (int i = 0 ; i < max_word_size ; ++i) {
+    //     for (int j = 0 ; j < i + 1 ; ++j) {
+    //         for (int k = 0 ; k < 256 ; ++k) {
+    //             if (worth[i][j][k] == 0) {
+    //                 marker[k] = 1;
+    //                 --to_sort;
+    //             }
+    //         }
+    //         while (to_sort--) {
+    //             int max = 0;
+    //             int index = 0;
+    //             for (int k = 0 ; k < 256 ; ++k) {
+    //                 if (marker[k]) continue;
+    //                 if (worth[i][j][k] > max) {
+    //                     index = k;
+    //                     max = worth[i][j][k];
+    //                 }
+    //             }
+    //             marker[index] = 1;
+    //             worth[i][j][index] = to_sort;
+    //         }
+    //         to_sort = 256;
+    //         memset(marker, 0, 256 * sizeof(int));
+    //     }
+    // }
     *worth_ret = worth;
 
     //TODO remove useless allocated dicts
@@ -106,9 +106,9 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
 
         ++index_array[word_size - 1];
     }
-    for (int i = 0 ; i < max_word_size ; ++i) {
-        sort_dictionary(bigdict[i], dictnode_values[i], 0, index_array[i] - 1);
-    }
+    // for (int i = 0 ; i < max_word_size ; ++i) {
+    //     sort_dictionary(bigdict[i], dictnode_values[i], 0, index_array[i] - 1);
+    // }
 
     /* Returning the values */
     *dict_count_ret = dict_count;
@@ -171,10 +171,10 @@ int word_val(char* word, int** multi) {
     return value;
 }
 
-void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int last) {
+void sort_dictionary(Dictionary dictionary, long double* dictnode_values, int first, int last) {
     int i, j, pivot;
     char* temp;
-    int temp_v;
+    long double temp_v;
     if (first < last) {
         pivot = first;
         i = first;

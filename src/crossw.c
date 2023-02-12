@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include "extratypes.h"
 #include "extrafuns.h"
 
@@ -69,27 +70,53 @@ int main(int argc, char** argv) {
         if (dict_count[i] & 0x1F) map_sizes[i]++;
     }
 
-
+    //TODO sum bit with table?
     /* Initializing maps for all words */
     for (int i = 0 ; i < grid_count ; ++i) {
         int ind = grid_words[i]->size - 1;
         grid_words[i]->dict = malloc(dict_count[ind] * sizeof(char*));
         Dictionary dict = grid_words[i]->dict;
         memcpy(grid_words[i]->dict, bigdict[ind], dict_count[ind] * sizeof(char*));
+        int full_insec_domain = 0;
+        for (int j = 0 ; j < grid_words[i]->insecc ; ++j) 
+            full_insec_domain += dict_count[grid_words[i]->insecs[j].len - 1];
+        long double* word_values = malloc(dict_count[ind] * sizeof(long double));
+        for (int j = 0 ; j < dict_count[ind] ; ++j) word_values[j] = 1;
 
-        int* word_values = calloc(dict_count[ind], sizeof(int));
-        for (int j = 0 ; j < grid_words[i]->insecc ; ++j) {
-            int len = grid_words[i]->insecs[j].len;
-            int pos = grid_words[i]->insecs[j].pos;
-            int pos_local = grid_words[i]->insecs[j].pos_local;
-            for (int k = 0 ; k < dict_count[ind] ; ++k)
-                word_values[k] += worth[len - 1][pos][(int)dict[k][pos_local]]
-                                * worth[len - 1][pos][(int)dict[k][pos_local]]
-                                //* multi[ind][pos_local] //;
-                                * grid_words[i]->insecs[j].word->insecc
-                                * grid_words[i]->insecs[j].word->insecc
-                                * grid_words[i]->insecs[j].word->insecc;
+        for (int k = 0 ; k < dict_count[ind] ; ++k) {
+            int domain_sum = 0;
+            int domain_min = INT_MAX;
+            for (int j = 0 ; j < grid_words[i]->insecc ; ++j) {
+                int len = grid_words[i]->insecs[j].len;
+                int pos = grid_words[i]->insecs[j].pos;
+                int pos_local = grid_words[i]->insecs[j].pos_local;
+                int jworth = worth[len - 1][pos][(int)dict[k][pos_local]];
+                domain_sum += jworth;
+                domain_min = jworth < domain_min ? jworth : domain_min;
+                word_values[k] *= (long double)jworth;
+                                //* grid_words[i]->insecs[j].word->insecc;
+                                // / grid_words[i]->insecc
+                                // / full_insec_domain;
+            }
+            if (grid_words[i]->insecc == 0) continue;
+            int average = domain_sum / grid_words[i]->insecc;
+            word_values[k] *= (long double)domain_min / average;// * grid_words[i]->insecc / 2;
         }
+                                //* grid_words[i]->insecs[j].word->insecc;
+                // word_values[k] *= worth[len - 1][pos][(int)dict[k][pos_local]]
+                //                 / (long double) full_insec_domain;
+                                // Good one 2,1,2
+                                // worth[len - 1][pos][(int)dict[k][pos_local]]
+                                // multi[ind][pos_local]
+                                // grid_words[i]->insecs[j].word->insecc
+                                // worth[ind][pos_local][(int)dict[k][pos_local]]
+                                // worth[len - 1][pos][(int)dict[k][pos_local]]
+                                // * worth[len - 1][pos][(int)dict[k][pos_local]]
+                                // * worth[len - 1][pos][(int)dict[k][pos_local]]
+                                // * grid_words[i]->insecs[j].word->insecc;
+        // for (int j = 0 ; j < dict_count[ind] ; ++j) {
+        //     printf("%d:: %Le\n", j, word_values[j]);
+        // }
         sort_dictionary(dict, word_values, 0, dict_count[ind] - 1);
         free(word_values);
         /* Bitmaps section */

@@ -34,7 +34,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** word
 void free_dictionary(Dictionary* bigdict, int max_word_size, int* words_count);
 char* find_word(Word* word);
 int word_val(char* word, int** multi);
-void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int last);
+void sort_dictionary(Dictionary dictionary, long double* dictnode_values, int first, int last);
 
 /* words.c functions */
 void write_word(char** crossword, Word* node, char* word);
