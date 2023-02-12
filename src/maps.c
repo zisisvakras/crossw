@@ -80,8 +80,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
     return maps;
 }
 //FIXME change after new word struct
-void update_map(char** crossword, Word* word, Map*** maps) {
-    Map* map = word->map;
+void update_map(char** crossword, Map* map, Word* word, Map*** maps) {
     DBGCHECK(map->size == maps[word->size - 1][word->size]->size);
     memcpy(map->array, maps[word->size - 1][word->size]->array, map->size * sizeof(int));
     if (word->orientation) {

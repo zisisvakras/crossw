@@ -140,7 +140,7 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
 
 //TODO CHECK MAPS FOR SHIFT (MAYBE USE UNSIGNED)
 void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Word** words, int wordnode_count, Map*** bitmaps) {
-    
+
     int max_map_size = 0;
     int map_stack_size = 0;
     for (int i = 0 ; i < wordnode_count ; ++i) {
@@ -154,6 +154,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
     for (int i = 0 ; i < map_stack_size ; ++i) {
         map_stack[i].array = malloc(max_map_size * sizeof(int));
     }
+
     int map_stack_index = 0;
     
     /* Initilizing the crossword stack */
@@ -174,7 +175,6 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                 Word* word = words[index - 1]->insecs[i].word;
                 if (word->in_use == 0) {
                     --map_stack_index;
-                    DBGCHECK(word->map->size == map_stack[map_stack_index].size);
                     word->map->sum = map_stack[map_stack_index].sum;
                     memcpy(word->map->array, map_stack[map_stack_index].array, word->map->size * sizeof(int));
                 }
@@ -205,7 +205,6 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                         Word* word_b = words[index]->insecs[j].word;
                         if (word_b->in_use == 0) {
                             --map_stack_index;
-                            DBGCHECK(word_b->map->size == map_stack[map_stack_index].size);
                             word_b->map->sum = map_stack[map_stack_index].sum;
                             memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
                         }
