@@ -89,8 +89,6 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
     free(bigdict);
 }
 
-//TODO optimize
-//TODO fix 32 and make it sizeof(int) * 8
 char* find_word(Dictionary dictionary, Word* word) {
     int* array = word->map->array;
     int size = word->map->size;

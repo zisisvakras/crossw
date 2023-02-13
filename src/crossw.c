@@ -9,6 +9,12 @@ extern int errno;
 
 int main(int argc, char** argv) {
 
+    /* This program cannot support ints lower than 4 bytes ;-; */
+    if (sizeof(int) < 4) {
+        fprintf(stderr, "I can't run on this machine ;-;\n");
+        return 1;
+    }
+
     if (argc < 2) { /* Argument error handling */
         fprintf(stderr, "Not enough arguments\n");
         return 1;

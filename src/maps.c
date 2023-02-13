@@ -79,25 +79,6 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
     free(map_sizes);
     return maps;
 }
-//FIXME change after new word struct
-void update_map(char** crossword, Map* map, Word* word, Map*** maps) {
-    DBGCHECK(map->size == maps[word->size - 1][word->size]->size);
-    memcpy(map->array, maps[word->size - 1][word->size]->array, map->size * sizeof(int));
-    if (word->orientation) {
-        for (int i = word->begin ; i <= word->end ; ++i) {
-            char ch = crossword[i][word->constant];
-            if (ch == '-') continue;
-            join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
-        }
-    }
-    else {
-        for (int i = word->begin ; i <= word->end ; ++i) {
-            char ch = crossword[word->constant][i];
-            if (ch == '-') continue;
-            join_map(map, maps[word->size - 1][i - word->begin] + (ch - 'a'));
-        }
-    }
-}
 
 void join_map(Map* map1, Map* map2) {
     DBGCHECK(map1->size == map2->size); // debug tools

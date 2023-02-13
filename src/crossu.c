@@ -167,7 +167,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
         char* word_found = NULL;
         if ((word_found = find_word(bigdict[words[index]->size - 1], words[index])) == NULL) {
             if (index == 0) { /* Cannot backtrack from zero */
-                fprintf(stderr, "Couldn\'t solve crossword ;-;\n");
+                fprintf(stderr, "Couldn\'t solve crossword (extra sad) :(\n");
                 exit(1);
             }
             /* Fixing back all maps that got ruined from the word put */
