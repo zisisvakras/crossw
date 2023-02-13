@@ -159,10 +159,10 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
     
     /* Initilizing the crossword stack */
     char*** crosswords = init_crosswords(*crossword, crossword_size, wordnode_count);
-    int index = 0, backtrack = 0;
+    int index = 0, prune_flag = 0;
     prop_word(words, wordnode_count, index);
     while (index < wordnode_count) {
-        backtrack = 0;
+        prune_flag = 0;
         /* Find word in bigdict */
         char* word_found = NULL;
         if ((word_found = find_word(bigdict[words[index]->size - 1], words[index])) == NULL) {
@@ -181,6 +181,34 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             }
             words[index - 1]->in_use = 0;
             --index;
+            // CBJ
+            Word* word = words[index + 1];
+            int bt_to = -1;
+            for (int j = index - 1 ; j >= 0 ; --j) {
+                for (int k = 0 ; k < words[j]->insecc ; ++k) {
+                    Word* word_k = words[j]->insecs[k].word;
+                    if (word_k->orientation != word->orientation) continue;
+                    if (word_k->constant != word->constant) continue;
+                    if (word_k->begin != word->begin) continue;
+                    if (word_k->end != word->end) continue;
+                    bt_to = j;
+                    break;
+                }
+                if (bt_to >= 0) break;
+            }
+            if (bt_to == -1) continue;
+            for (int j = index - 1 ; j >= bt_to ; --j) {
+                for (int k = words[j]->insecc - 1 ; k >= 0 ; --k) {
+                    Word* word_b = words[j]->insecs[k].word;
+                    if (word_b->in_use == 0) {
+                        --map_stack_index;
+                        word_b->map->sum = map_stack[map_stack_index].sum;
+                        memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
+                    }
+                }
+                words[j]->in_use = 0;
+                --index;
+            }
             continue;
         }
         /* Copying previous state before we write anything */
@@ -211,13 +239,13 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                     }
                     words[index]->in_use = 0;
                     --index;
-                    backtrack = 1;
+                    prune_flag = 1;
                     break;
                 }
             }
         }
         ++index;
-        if (backtrack == 0) {
+        if (prune_flag == 0) {
             if (index == wordnode_count) break;
             prop_word(words, wordnode_count, index);
         }
