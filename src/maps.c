@@ -90,6 +90,16 @@ void join_map(Map* map1, Map* map2) {
     }
 }
 
+void remconf_map(Map* map1, Map* map2) {
+    DBGCHECK(map1->size == map2->size); // debug tools
+    register int* array1 = map1->array;
+    register int* array2 = map2->array;
+    int size = map1->size;
+    for (register int i = 0 ; i < size ; ++i) {
+        array1[i] ^= array1[i] & array2[i];
+    }
+}
+
 /* Brian Kernighan’s Algorithm */
 int sum_bit(Map* map) {
     DBGCHECK(map != NULL); // debug tools

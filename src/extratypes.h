@@ -32,6 +32,7 @@ struct Intersection {
     int x;
     int y;
     int pos;
+    int pos_l;
 };
 
 //TODO find better names maybe

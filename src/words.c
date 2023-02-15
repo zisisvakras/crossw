@@ -123,7 +123,8 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** 
                         .word = &(*grid_words[k]),
                         .x = grid_words[i]->orientation ? j : cord,
                         .y = grid_words[i]->orientation ? cord : j,
-                        .pos = cord - grid_words[k]->begin
+                        .pos = cord - grid_words[k]->begin,
+                        .pos_l = j - grid_words[i]->begin
                     };
                     ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
                     break;

@@ -12,6 +12,7 @@
         "stdlib.h": "c",
         "extratypes.h": "c",
         "*.tcc": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "chrono": "c"
     }
 }
