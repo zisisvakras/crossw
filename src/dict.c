@@ -9,6 +9,8 @@ extern int errno;
 
 Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict_count_ret, int** multi) {
 
+    srand(20001);
+
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
         error("Error while handling dictionary", errno);
@@ -58,7 +60,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
         mallerr(bigdict[word_size - 1][index], errno);
 
         strcpy(bigdict[word_size - 1][index], buffer); /* Copy word in buffer to dict */
-        dictnode_values[word_size - 1][index] = word_val(buffer, multi); /* Saving the words value */
+        dictnode_values[word_size - 1][index] =  /*rand();*/word_val(buffer, multi); /* Saving the words value */
 
         ++index_array[word_size - 1];
     }

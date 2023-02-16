@@ -17,6 +17,7 @@ struct Word {
     int insecc;
     Intersection* insecs;
     Map* map;
+    int* conf_set;
 };
 
 //TODO enums for horizontal and vertical
