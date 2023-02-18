@@ -2,6 +2,6 @@
 
 make > /dev/null
 
-valgrind ./target/crossw data/Crossword$1.txt -dict data/Words.txt
+valgrind --dsymutil=yes --tool=callgrind --log-file=val.out ./target/crossw data/Crossword$1.txt -dict data/Words.txt
 
 make clean > /dev/null

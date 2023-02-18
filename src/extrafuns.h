@@ -3,16 +3,16 @@
 #include "extratypes.h"
 
 /* Generic error thrower with errno */
-#define error(x, e) ({ \
+#define error(x, e) {  \
     perror((x));       \
     exit((e));         \
-})
+}
 
 /* Malloc error handling */
-#define mallerr(x, e) ({                                \
+#define mallerr(x, e) {                                 \
     if ((x) == NULL)                                    \
         error("Error while allocating memory", (e));    \
-})
+}
 
 /* Debugging tools */
 #ifdef DEBUG

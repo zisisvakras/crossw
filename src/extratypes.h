@@ -9,6 +9,7 @@ typedef char** Dictionary;
 //TODO add word size and make changes
 struct Word {
     int in_use;
+    int put_index;
     int orientation;
     int constant;
     int begin;

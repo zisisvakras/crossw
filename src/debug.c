@@ -20,13 +20,13 @@ void print_words(Word** words, int wordnode_count, char** crossword) {
             words[i]->end,
             words[i]->size
         };
-        printf("(%p) %s: %d begin: %d end: %d size: %d\n", words + i, c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
+        printf("(%p) %s: %d begin: %d end: %d size: %d\n", (void*)(words + i), c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
         print_map(words[i]->map);
         /* Interesections */
         printf("insecs:\n");
         int j = 0;
         while(words[i]->insecs[j].word) {
-            printf("%p\n", words[i]->insecs[j].word);
+            printf("%p\n", (void*)(words[i]->insecs[j].word));
             ++j;
         }
         /* Actual value in crossword */

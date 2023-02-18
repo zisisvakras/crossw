@@ -91,6 +91,9 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
     free(bigdict);
 }
 
+
+//TODO add offset to maps when u find a word so you can start from there
+//TODO maybe add them to premade bitmaps as well (that will be calculated in sum_bit)
 char* find_word(Dictionary dictionary, Word* word) {
     int* array = word->map->array;
     int size = word->map->size;
