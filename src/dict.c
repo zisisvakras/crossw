@@ -97,12 +97,15 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
 char* find_word(Dictionary dictionary, Word* word) {
     int* array = word->map->array;
     int size = word->map->size;
-    for (int i = 0 ; i < size ; ++i) {
+    int offset = word->map->offset >> 5;
+    for (int i = offset ; i < size ; ++i) {
         if (array[i] == 0) continue;
+        int n = array[i];
         for (int j = 0 ; j < 32 ; ++j) {
-            if ((array[i] >> j) & 1) {
+            if ((n >> j) & 1) {
                 array[i] ^= 1 << j;
                 --word->map->sum;
+                word->map->offset = ((i << 5) | j) + 1;
                 return dictionary[(i << 5) | j];
             }
         }

@@ -13,6 +13,7 @@
         "extratypes.h": "c",
         "*.tcc": "c",
         "stdio.h": "c",
-        "chrono": "c"
+        "chrono": "c",
+        "valarray": "c"
     }
 }

@@ -101,7 +101,7 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
             fprintf(stderr, "Word \"%s\" cannot be placed\n", buffer);
             exit(1);
         }
-        Map* map = malloc(sizeof(Map));
+        Map* map = calloc(1, sizeof(Map));
         map->size = maps[word_size - 1][word_size]->size;
         map->array = malloc(map->size * sizeof(int));
         /* Copying array with 1s */
@@ -167,6 +167,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
     prop_word(words, wordnode_count, index);
     map_stack[map_stack_index].sum = words[index]->map->sum;
     map_stack[map_stack_index].size = words[index]->map->size;
+    map_stack[map_stack_index].offset = words[index]->map->offset;
     memcpy(map_stack[map_stack_index].array, words[index]->map->array, words[index]->map->size * sizeof(int));
     ++map_stack_index;
     while (index < wordnode_count) {
@@ -213,6 +214,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             do {
                 --map_stack_index;
                 words[index]->map->sum = map_stack[map_stack_index].sum;
+                words[index]->map->offset = map_stack[map_stack_index].offset;
                 memcpy(words[index]->map->array, map_stack[map_stack_index].array, words[index]->map->size * sizeof(int));
                 memset(words[index]->conf_set, 0, wordnode_count * sizeof(int));
                 --index;
@@ -222,6 +224,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                     if (word_b->in_use == 0) {
                         --map_stack_index;
                         word_b->map->sum = map_stack[map_stack_index].sum;
+                        word_b->map->offset = map_stack[map_stack_index].offset;
                         memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
                     }
                 }
@@ -243,6 +246,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             if (word->in_use == 0) {
                 map_stack[map_stack_index].sum = word->map->sum;
                 map_stack[map_stack_index].size = word->map->size;
+                map_stack[map_stack_index].offset = word->map->offset;
                 memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(int));
                 ++map_stack_index;
                 join_map(word->map, &bitmaps[word->size - 1][insec.pos][crosswords[index + 1][insec.x][insec.y] - 'a']);
@@ -258,6 +262,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                         if (word_b->in_use == 0) {
                             --map_stack_index;
                             word_b->map->sum = map_stack[map_stack_index].sum;
+                            word_b->map->offset = map_stack[map_stack_index].offset;
                             memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
                             word_b->conf_set[index] = 0;
                         }
@@ -274,7 +279,8 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             if (index == wordnode_count) break;
             prop_word(words, wordnode_count, index);
             map_stack[map_stack_index].sum = words[index]->map->sum;
-            map_stack[map_stack_index].size = words[index]->map->size;
+            map_stack[map_stack_index].offset = words[index]->map->offset;
+            map_stack[map_stack_index].size = words[index]->map->size; //TODO remove size allocations in stack, no need they wont change
             memcpy(map_stack[map_stack_index].array, words[index]->map->array, words[index]->map->size * sizeof(int));
             ++map_stack_index;
         }

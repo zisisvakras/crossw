@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
     /* Initializing maps for all words */
     for (int i = 0 ; i < grid_count ; ++i) {
         Map* src = dict_maps[grid_words[i]->size - 1][grid_words[i]->size];
-        grid_words[i]->map = malloc(sizeof(Map));
+        grid_words[i]->map = calloc(1, sizeof(Map));
         grid_words[i]->map->size = src->size;
         grid_words[i]->map->array = malloc(src->size * sizeof(int));
         /* Copying the map with 1s */

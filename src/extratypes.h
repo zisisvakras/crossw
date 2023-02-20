@@ -27,6 +27,7 @@ struct Map {
     int* array;
     int size;
     int sum;
+    int offset;
 };
 
 struct Intersection {

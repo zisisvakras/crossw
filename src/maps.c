@@ -7,7 +7,10 @@
 
 extern int errno;
 
+
+
 Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) {
+    
     /* Calculating map_sizes */
     int* map_sizes = malloc(max_word_size * sizeof(int));
     mallerr(map_sizes, errno);
@@ -24,11 +27,11 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
         maps[i] = malloc((i + 2) * sizeof(Map*)); /* +2 because i is word_size - 1 */
         mallerr(maps[i], errno);
         for (int j = 0 ; j <= i ; ++j) {
-            maps[i][j] = malloc(26 * sizeof(Map)); /* 26 letters of the english alphabet */
+            maps[i][j] = calloc(26, sizeof(Map)); /* 26 letters of the english alphabet */
             mallerr(maps[i][j], errno);
         }
         /* Adding an extra map that will be full of 1s */
-        maps[i][i + 1] = malloc(sizeof(Map));
+        maps[i][i + 1] = calloc(1, sizeof(Map));
         mallerr(maps[i][i + 1], errno);
     }
 
@@ -100,13 +103,14 @@ void remconf_map(Map* map1, Map* map2) {
     }
 }
 
-/* Brian Kernighan’s Algorithm */
 int sum_bit(Map* map) {
     DBGCHECK(map != NULL); // debug tools
     register int* array = map->array;
     int size = map->size;
     register int sum = 0;
-    for (register int i = 0 ; i < size ; ++i) {
+    int offset = map->offset >> 5;
+    /* Sum calculator Brian Kernighan’s Algorithm */
+    for (register int i = offset ; i < size ; ++i) {
         register int n = array[i];
         if (n == 0) continue;
         while (n) {
