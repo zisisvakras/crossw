@@ -7,9 +7,7 @@
 
 extern int errno;
 
-Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict_count_ret, int** multi) {
-
-    srand(20001);
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict_count_ret) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
@@ -23,10 +21,17 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
     int* dict_count = calloc(max_word_size, sizeof(int));
     mallerr(dict_count, errno);
 
+    /* Intiializing worth */
+    int worth[256] = {0};
+    memset(worth, 0, 256 * sizeof(int));
+
     /* Counting the words in dict file */
     while (fscanf(dictionary_file, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue;
+        for (int i = 0 ; i < word_size ; ++i) {
+            ++worth[(int)buffer[i]];
+        }
         dict_count[word_size - 1]++;
     }
 
@@ -60,7 +65,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
         mallerr(bigdict[word_size - 1][index], errno);
 
         strcpy(bigdict[word_size - 1][index], buffer); /* Copy word in buffer to dict */
-        dictnode_values[word_size - 1][index] =  /*rand();*/word_val(buffer, multi); /* Saving the words value */
+        dictnode_values[word_size - 1][index] = word_val(buffer, worth); /* Saving the words value */
 
         ++index_array[word_size - 1];
     }
@@ -112,20 +117,10 @@ char* find_word(Dictionary dictionary, Word* word) {
 
 //TODO ask takis if letters other than 'a'-'z' are allowed
 //TODO making maps for all ascii characters
-int word_val(char* word, int** multi) {
-    int* smulti = multi[strlen(word) - 1]; // "s"pecific multi
+int word_val(char* word, int* worth) {
     int value = 0, i = -1;
-    int worth['z' + 1] = {
-        ['e'] = 26, ['a'] = 25, ['i'] = 24, ['r'] = 23,
-        ['t'] = 22, ['o'] = 21, ['n'] = 20, ['s'] = 19,
-        ['l'] = 18, ['c'] = 17, ['u'] = 16, ['m'] = 15,
-        ['d'] = 14, ['p'] = 13, ['h'] = 12, ['g'] = 11,
-        ['b'] = 10, ['y'] = 9,  ['f'] = 8,  ['w'] = 7,
-        ['k'] = 6,  ['v'] = 5,  ['x'] = 4,  ['z'] = 3,
-        ['j'] = 2,  ['q'] = 1
-    };
     while (word[++i]) {
-        value += worth[(int)word[i]] * smulti[i];
+        value += worth[(int)word[i]];
     }
     return value;
 }

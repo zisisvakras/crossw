@@ -50,21 +50,13 @@ int main(int argc, char** argv) {
     int max_word_size, crossword_size;
     init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
 
-    /* Allocating multipliers */
-    int** multi = malloc(max_word_size * sizeof(int*));
-    mallerr(multi, errno);
-    for (int i = 0 ; i < max_word_size ; ++i) {
-        multi[i] = calloc((i + 1), sizeof(int));
-        mallerr(multi[i], errno);
-    }
-
     /* Map the crossword */
     int grid_count = count_words_on_grid(crossword, crossword_size); /* Counts words on grid */
-    Word** grid_words = map_words_on_grid(crossword, crossword_size, grid_count, multi);
+    Word** grid_words = map_words_on_grid(crossword, crossword_size, grid_count);
 
     /* Initialize dictionaries */
     int* dict_count = NULL; /* Counts words in each dictionary */
-    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count, multi);
+    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count);
 
     /* Initialize dict_maps */
     Map*** dict_maps = init_dict_maps(bigdict, max_word_size, dict_count);

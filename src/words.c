@@ -54,7 +54,7 @@ int count_words_on_grid(char** crossword, int crossword_size) {
     return count;
 }
 
-Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** multi) {
+Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
     /* Initializing grid_words */
     Word** grid_words = malloc(count * sizeof(Word*));
     mallerr(grid_words, errno);
@@ -126,7 +126,6 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count, int** 
                         .pos = cord - grid_words[k]->begin,
                         .pos_l = j - grid_words[i]->begin
                     };
-                    ++multi[grid_words[i]->size - 1][j - grid_words[i]->begin];
                     break;
                 }
             }
