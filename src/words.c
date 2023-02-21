@@ -33,20 +33,26 @@ void print_solution(char** crossword, Word** ord_words, int count) {
 }
 
 /* Count words on the crossword */
-int count_words_on_grid(char** crossword, int crossword_size) {
+int count_words_on_grid(char** crossword, int crossword_size, int* lengths_on_grid) {
     int hor_size = 0, ver_size = 0, count = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
             /* Horizontal */
             if (crossword[i][j] != '#') hor_size++;
             if (crossword[i][j] == '#' || j == crossword_size - 1) {
-                if (hor_size > 1) count++; /* Words with size 1 don't count */
+                if (hor_size > 1) { /* Words with size 1 don't count */
+                    lengths_on_grid[hor_size - 1] = 1;
+                    count++;
+                }
                 hor_size = 0;
             }
             /* Vertical */
             if (crossword[j][i] != '#') ver_size++;
             if (crossword[j][i] == '#' || j == crossword_size - 1) {
-                if (ver_size > 1) count++;
+                if (ver_size > 1) { /* Words with size 1 don't count */
+                    lengths_on_grid[ver_size - 1] = 1;
+                    count++;
+                }
                 ver_size = 0;
             }
         }
@@ -144,7 +150,7 @@ void prop_word(Word** words, int wordnode_count, int last) {
     int insec = words[index]->insecc;
     /**
      * Looping through all words to find the one with lowest possibilities
-     * as a 2nd criteria we are also looking for the number of interesections
+     * as a 2nd criteria we are also looking for the number of intersections
      * note for the 2nd one: this might not be needed we are not sure ¯\_(ツ)_/¯
      */
     for (int i = index + 1 ; i < wordnode_count ; ++i) {

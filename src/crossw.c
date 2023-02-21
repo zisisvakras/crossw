@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include "extratypes.h"
 #include "extrafuns.h"
 
@@ -9,13 +10,14 @@ extern int errno;
 
 int main(int argc, char** argv) {
 
-    /* This program cannot support ints lower than 4 bytes ;-; */
-    if (sizeof(int) < 4) {
-        fprintf(stderr, "I can't run on this machine ;-;\n");
+    /* Sanity check section */
+    if (sizeof(int) < 4 || CHAR_BIT != 8) {
+        fprintf(stderr, "Really bro? -_-\n");
         return 1;
     }
 
-    if (argc < 2) { /* Argument error handling */
+    /* Argument error handling */
+    if (argc < 2) {
         fprintf(stderr, "Not enough arguments\n");
         return 1;
     }
@@ -26,7 +28,7 @@ int main(int argc, char** argv) {
     int check_mode = 0, draw_mode = 0;
 
     /* Loop reading arguments */
-    while (--argc) {
+    while (--argc) { //TODO better arguments, orestis
         if (argv[argc]) {
             /* Setting the flags as needed */
             if (!strcmp(argv[argc], "-dict")) {
@@ -50,13 +52,20 @@ int main(int argc, char** argv) {
     int max_word_size, crossword_size;
     init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
 
+    /* These markers will lessen the work/memory before solve */
+    int* lengths_on_grid = calloc(max_word_size, sizeof(int));
+    mallerr(lengths_on_grid, errno);
+
+    int* ascii_on_dict = calloc(256, sizeof(int));
+    mallerr(ascii_on_dict, errno);
+
     /* Map the crossword */
-    int grid_count = count_words_on_grid(crossword, crossword_size); /* Counts words on grid */
+    int grid_count = count_words_on_grid(crossword, crossword_size, lengths_on_grid); /* Counts words on grid */
     Word** grid_words = map_words_on_grid(crossword, crossword_size, grid_count);
 
     /* Initialize dictionaries */
     int* dict_count = NULL; /* Counts words in each dictionary */
-    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count);
+    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count, lengths_on_grid, ascii_on_dict);
 
     /* Initialize dict_maps */
     Map*** dict_maps = init_dict_maps(bigdict, max_word_size, dict_count);

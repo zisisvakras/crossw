@@ -7,7 +7,8 @@
 
 extern int errno;
 
-Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict_count_ret) {
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size,
+                            int** dict_count_ret, int* lengths_on_grid, int* ascii_on_dict) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
@@ -23,13 +24,14 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
 
     /* Intiializing worth */
     int worth[256] = {0};
-    memset(worth, 0, 256 * sizeof(int));
 
     /* Counting the words in dict file */
     while (fscanf(dictionary_file, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue;
+        if (lengths_on_grid[word_size - 1] == 0) continue;
         for (int i = 0 ; i < word_size ; ++i) {
+            ascii_on_dict[(int)buffer[i]] = 1;
             ++worth[(int)buffer[i]];
         }
         dict_count[word_size - 1]++;
@@ -37,11 +39,12 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
 
     //TODO remove useless allocated dicts
     /* Allocate enough arrays for all word sizes that we may need */
-    Dictionary* bigdict = malloc(max_word_size * sizeof(Dictionary));
+    Dictionary* bigdict = calloc(max_word_size, sizeof(Dictionary));
     mallerr(bigdict, errno);
-    int** dictnode_values = malloc(max_word_size * sizeof(int*));
+    int** dictnode_values = calloc(max_word_size, sizeof(int*));
     mallerr(dictnode_values, errno);
     for (int i = 0 ; i < max_word_size ; ++i) {
+        if (lengths_on_grid[i] == 0) continue;
         bigdict[i] = malloc(dict_count[i] * sizeof(char*));
         mallerr(bigdict[i], errno);
         dictnode_values[i] = malloc(dict_count[i] * sizeof(int*));
@@ -59,6 +62,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
     while (fscanf(dictionary_file, "%80s", buffer) == 1) { /* Scan 1 word at a time */
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue; /* No need to allocate larger words than needed */
+        if (lengths_on_grid[word_size - 1] == 0) continue;
 
         int index = index_array[word_size - 1];
         bigdict[word_size - 1][index] = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
@@ -70,6 +74,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
         ++index_array[word_size - 1];
     }
     for (int i = 0 ; i < max_word_size ; ++i) {
+        if (lengths_on_grid[i] == 0) continue;
         sort_dictionary(bigdict[i], dictnode_values[i], 0, index_array[i] - 1);
     }
 
@@ -87,7 +92,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
 }
 
 void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
-    for (int i = 0 ; i < max_word_size ; i++) {
+    for (int i = 0 ; i < max_word_size ; ++i) {
         for (int j = 0 ; j < dict_count[i] ; ++j) {
             free(bigdict[i][j]);
         }
