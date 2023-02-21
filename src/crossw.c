@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count, lengths_on_grid, ascii_on_dict);
 
     /* Initialize dict_maps */
-    Map*** dict_maps = init_dict_maps(bigdict, max_word_size, dict_count);
+    Map*** dict_maps = init_dict_maps(bigdict, max_word_size, dict_count, lengths_on_grid, ascii_on_dict);
     
     /* Initializing maps for all words */
     for (int i = 0 ; i < grid_count ; ++i) {

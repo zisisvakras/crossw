@@ -7,11 +7,14 @@
 
 extern int errno;
 
-Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) {
+Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
+                      int* lengths_on_grid, int* ascii_on_dict) {
+
     /* Calculating map_sizes */
     int* map_sizes = malloc(max_word_size * sizeof(int));
     mallerr(map_sizes, errno);
     for (int i = 1 ; i < max_word_size ; ++i) {
+        if (lengths_on_grid[i] == 0) continue;
         map_sizes[i] = words_count[i] >> 5;
         /* If words are not divisible by 32 we need 1 extra non-full array */
         if (words_count[i] & 0x1F) map_sizes[i]++;
@@ -20,11 +23,12 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
     /* Allocating memory for maps */
     Map*** maps = malloc(max_word_size * sizeof(Map**));
     mallerr(maps, errno);
-    for (int i = 0 ; i < max_word_size ; ++i) {
+    for (int i = 1 ; i < max_word_size ; ++i) {
+        if (lengths_on_grid[i] == 0) continue;
         maps[i] = malloc((i + 2) * sizeof(Map*)); /* +2 because i is word_size - 1 */
         mallerr(maps[i], errno);
         for (int j = 0 ; j <= i ; ++j) {
-            maps[i][j] = malloc(26 * sizeof(Map)); /* 26 letters of the english alphabet */
+            maps[i][j] = malloc(256 * sizeof(Map)); /* all of ascii table */
             mallerr(maps[i][j], errno);
         }
         /* Adding an extra map that will be full of 1s */
@@ -35,9 +39,11 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
     /* Allocating the arrays */
     /* Starts from one because word length starts from 2 */
     for (int word_size = 1 ; word_size < max_word_size ; ++word_size) {
+        if (lengths_on_grid[word_size] == 0) continue;
         /* <= because word_size is -1 from actual length */
         for (int position = 0 ; position <= word_size ; ++position) {
-            for (int letter = 0 ; letter < 26 ; ++letter) {
+            for (int letter = 0 ; letter < 256 ; ++letter) {
+                if (ascii_on_dict[letter] == 0) continue;
                 maps[word_size][position][letter].size = map_sizes[word_size];
                 maps[word_size][position][letter].array = calloc(map_sizes[word_size], sizeof(int));
                 mallerr(maps[word_size][position][letter].array, errno);
@@ -46,6 +52,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
     }
     /* Creating the maps */
     for (int i = 1 ; i < max_word_size ; ++i) {
+        if (lengths_on_grid[i] == 0) continue;
         for (int j = 0 ; j < words_count[i] ; ++j) { /* Looping through every word in dict */
             char* word = bigdict[i][j];
             for (int k = 0 ; word[k] ; ++k) { /* Every letter in word */
@@ -57,13 +64,14 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count) 
                  * i is the word_length.
                  * k is the position in the word.
                 */
-                maps[i][k][word[k] - 'a'].array[j >> 5] |= 1 << (j & 0x1F);
+                maps[i][k][(int)word[k]].array[j >> 5] |= 1 << (j & 0x1F);
             }
         }
     }
     
     /* Creating the maps with all 1s */
     for (int word_size = 1 ; word_size < max_word_size ; ++word_size) {
+        if (lengths_on_grid[word_size] == 0) continue;
         maps[word_size][word_size + 1][0].size = map_sizes[word_size];
         maps[word_size][word_size + 1][0].array = malloc(map_sizes[word_size] * sizeof(int));
         mallerr(maps[word_size][word_size + 1][0].array, errno);

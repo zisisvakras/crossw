@@ -46,7 +46,8 @@ void print_solution(char** crossword, Word** ord_words, int count);
 
 /* maps.c functions */
 void remconf_map(Map* map1, Map* map2);
-Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count);
+Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
+                      int* lengths_on_grid, int* ascii_on_dict);
 void join_map(Map* map1, Map* map2);
 int sum_bit(Map* map);
 

@@ -120,8 +120,6 @@ char* find_word(Dictionary dictionary, Word* word) {
     return NULL;
 }
 
-//TODO ask takis if letters other than 'a'-'z' are allowed
-//TODO making maps for all ascii characters
 int word_val(char* word, int* worth) {
     int value = 0, i = -1;
     while (word[++i]) {

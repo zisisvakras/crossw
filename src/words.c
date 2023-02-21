@@ -38,8 +38,8 @@ int count_words_on_grid(char** crossword, int crossword_size, int* lengths_on_gr
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
             /* Horizontal */
-            if (crossword[i][j] != '#') hor_size++;
-            if (crossword[i][j] == '#' || j == crossword_size - 1) {
+            if (crossword[i][j] != '\a') hor_size++;
+            if (crossword[i][j] == '\a' || j == crossword_size - 1) {
                 if (hor_size > 1) { /* Words with size 1 don't count */
                     lengths_on_grid[hor_size - 1] = 1;
                     count++;
@@ -47,8 +47,8 @@ int count_words_on_grid(char** crossword, int crossword_size, int* lengths_on_gr
                 hor_size = 0;
             }
             /* Vertical */
-            if (crossword[j][i] != '#') ver_size++;
-            if (crossword[j][i] == '#' || j == crossword_size - 1) {
+            if (crossword[j][i] != '\a') ver_size++;
+            if (crossword[j][i] == '\a' || j == crossword_size - 1) {
                 if (ver_size > 1) { /* Words with size 1 don't count */
                     lengths_on_grid[ver_size - 1] = 1;
                     count++;
@@ -74,12 +74,12 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
     int begin_h = 0, begin_v = 0, index = 0;
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
-            if (crossword[i][j] != '#') {
+            if (crossword[i][j] != '\a') {
                 if (hor_size == 0) begin_h = j;
                 hor_size++;
             }
-            if (crossword[i][j] == '#' || j == crossword_size - 1) {
-                int newj = ((crossword[i][j] != '#') ? j : (j - 1));
+            if (crossword[i][j] == '\a' || j == crossword_size - 1) {
+                int newj = ((crossword[i][j] != '\a') ? j : (j - 1));
                 if (hor_size > 1) {
                     *grid_words[index++] = (Word) {
                         .orientation = 0,
@@ -91,12 +91,12 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
                 }
                 hor_size = 0;
             }
-            if (crossword[j][i] != '#') {
+            if (crossword[j][i] != '\a') {
                 if (ver_size == 0) begin_v = j;
                 ver_size++;
             }
-            if (crossword[j][i] == '#' || j == crossword_size - 1) {
-                int newj = ((crossword[j][i] != '#') ? j : (j - 1));
+            if (crossword[j][i] == '\a' || j == crossword_size - 1) {
+                int newj = ((crossword[j][i] != '\a') ? j : (j - 1));
                 if (ver_size > 1) {
                     *grid_words[index++] = (Word) {
                         .orientation = 1,

@@ -30,10 +30,9 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
     /* Allocating memory for the grid */
     crossword = malloc(crossword_size * sizeof(char*));
     mallerr(crossword, errno);
-    crossword[0] = malloc(crossword_size * crossword_size * sizeof(char));
+    /* Setting every character with \0 to begin */
+    crossword[0] = calloc(crossword_size * crossword_size, sizeof(char));
     mallerr(crossword[0], errno);
-    /* Setting every character with '-' to begin */
-    memset(crossword[0], '-', crossword_size * crossword_size * sizeof(char));
     /* Fixing the pointers in the right spot */
     for (int i = 0 ; i < crossword_size - 1 ; ++i) {
         crossword[i + 1] = crossword[i] + crossword_size;
@@ -42,7 +41,8 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
     /* Reading the black tiles */
     int x, y;
     while (fscanf(crossword_file, "%d %d", &x, &y) == 2) {
-        crossword[x - 1][y - 1] = '#'; /* Offset by 1 since data on file is based 1 */
+        /* Using bell to mark black tiles since # can be in words */
+        crossword[x - 1][y - 1] = '\a'; /* Offset by 1 since data on file is based 1 */
     }
 
     /* Biggest word finder */
@@ -50,17 +50,17 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
         int len_row = 0, len_col = 0;
         for (int j = 0 ; j < crossword_size ; j++) {
             /* Row section */
-            if (crossword[i][j] == '#') {
+            if (crossword[i][j] == '\a') {
                 if (len_row > max_word_size) max_word_size = len_row;
                 len_row = 0;
             }
-            if (crossword[i][j] == '-') len_row++;
+            if (crossword[i][j] == '\0') len_row++;
             /* Column section */
-            if (crossword[j][i] == '#') {
+            if (crossword[j][i] == '\a') {
                 if (len_col > max_word_size) max_word_size = len_col;
                 len_col = 0;
             }
-            if (crossword[j][i] == '-') len_col++;
+            if (crossword[j][i] == '\0') len_col++;
         }
         if (len_row > max_word_size) max_word_size = len_row;
         if (len_col > max_word_size) max_word_size = len_col;
@@ -78,9 +78,11 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
 void draw_crossword(char** crossword, int crossword_size) {
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
-            putchar(crossword[i][j] == '#' ? '#' : ' ');
-            putchar(crossword[i][j]);
-            putchar(crossword[i][j] == '#' ? '#' : ' ');
+            if (crossword[i][j] == '\a') {
+                printf("###");
+            } else {
+                printf(" %c ", crossword[i][j]);
+            }
         }
         putchar('\n');
     }
@@ -108,7 +110,7 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
         memcpy(map->array, maps[word_size - 1][word_size]->array, map->size * sizeof(int));
         /* Creating the appropriate map for the word given */
         for (int i = 0 ; buffer[i] ; ++i) {
-            join_map(map, maps[word_size - 1][i] + (buffer[i] - 'a'));
+            join_map(map, maps[word_size - 1][i] + buffer[i]);
         }
         /* If map has 0 bits that means word is not in dict */
         if (sum_bit(map) == 0) {
@@ -120,7 +122,7 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
             int beg = words[index]->begin;
             for (int i = beg ; i <= words[index]->end ; ++i) {
                 int ch = crossword[i][words[index]->constant];
-                if (ch != '-') join_map(map, maps[word_size - 1][i - beg] + (ch - 'a'));
+                if (ch != '\0') join_map(map, maps[word_size - 1][i - beg] + ch);
                 if (sum_bit(map) == 0) {
                     fprintf(stderr, "Word \"%s\" cannot be placed\n", buffer);
                     exit(1);
@@ -245,7 +247,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                 map_stack[map_stack_index].size = word->map->size;
                 memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(int));
                 ++map_stack_index;
-                join_map(word->map, &bitmaps[word->size - 1][insec.pos][crosswords[index + 1][insec.x][insec.y] - 'a']);
+                join_map(word->map, &bitmaps[word->size - 1][insec.pos][(int)crosswords[index + 1][insec.x][insec.y]]);
                 /* If some map turns out to be 0 do early backtrack (pruning the domain) */
                 if (sum_bit(word->map) == 0) {
                     for (int dw = 0 ; dw < word->insecc ; ++dw) {
