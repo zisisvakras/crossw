@@ -63,6 +63,12 @@ int main(int argc, char** argv) {
     int grid_count = count_words_on_grid(crossword, crossword_size, lengths_on_grid); /* Counts words on grid */
     Word** grid_words = map_words_on_grid(crossword, crossword_size, grid_count);
 
+    /* Just in case */
+    if (grid_count < 1) {
+        fprintf(stderr, "Nice crossword, no need of solving!\n");
+        return 1;
+    }
+
     /* Initialize dictionaries */
     int* dict_count = NULL; /* Counts words in each dictionary */
     Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count, lengths_on_grid, ascii_on_dict);

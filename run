@@ -4,11 +4,11 @@ make > /dev/null
 
 if [ "x$1" = "x7" ]
 then
-/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Empty7.txt -dict data/MoreWords.txt | \
-./target/crossw data/Empty7.txt -dict data/MoreWords.txt -check -draw
+/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Empty7.txt -dict data/Words.txt  | \
+./target/crossw data/Empty7.txt -dict data/Words.txt -check -draw
 else
-/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/EvenMoreWords.txt | \
-./target/crossw data/Crossword$1.txt -dict data/EvenMoreWords.txt -check -draw
+/usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/Words.txt  | \
+./target/crossw data/Crossword$1.txt -dict data/Words.txt -check -draw
 fi
 
 make clean > /dev/null

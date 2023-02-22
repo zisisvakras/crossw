@@ -42,7 +42,7 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
     int x, y;
     while (fscanf(crossword_file, "%d %d", &x, &y) == 2) {
         /* Using bell to mark black tiles since # can be in words */
-        crossword[x - 1][y - 1] = '\a'; /* Offset by 1 since data on file is based 1 */
+        crossword[x - 1][y - 1] = '\r'; /* Offset by 1 since data on file is based 1 */
     }
 
     /* Biggest word finder */
@@ -50,13 +50,13 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
         int len_row = 0, len_col = 0;
         for (int j = 0 ; j < crossword_size ; j++) {
             /* Row section */
-            if (crossword[i][j] == '\a') {
+            if (crossword[i][j] == '\r') {
                 if (len_row > max_word_size) max_word_size = len_row;
                 len_row = 0;
             }
             if (crossword[i][j] == '\0') len_row++;
             /* Column section */
-            if (crossword[j][i] == '\a') {
+            if (crossword[j][i] == '\r') {
                 if (len_col > max_word_size) max_word_size = len_col;
                 len_col = 0;
             }
@@ -78,7 +78,7 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
 void draw_crossword(char** crossword, int crossword_size) {
     for (int i = 0 ; i < crossword_size ; i++) {
         for (int j = 0 ; j < crossword_size ; j++) {
-            if (crossword[i][j] == '\a') {
+            if (crossword[i][j] == '\r') {
                 printf("###");
             } else {
                 printf(" %c ", crossword[i][j]);
