@@ -145,6 +145,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
     
     for (int i = 0 ; i < wordnode_count ; ++i) {
         words[i]->conf_set = calloc(wordnode_count, sizeof(int));
+        words[i]->past_fc = calloc(wordnode_count, sizeof(int));
     }
 
     int max_map_size = 0;
@@ -181,33 +182,17 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                 exit(1);
             }
             // h <- max(max-list(conf-set[i], max-list(past-fc[i])))
-            int max_conf_set = -1;
+            int jump_to = index - 1;
             for (int i = index - 1 ; i >= 0 ; --i) {
-                if (words[index]->conf_set[i]) {
-                    max_conf_set = i;
+                if (words[index]->conf_set[i] || words[index]->past_fc[i]) {
+                    jump_to = i;
                     break;
                 }
             }
-            int max_past_fc = -1;
-            for (int i = 0 ; i < words[index]->insecc ; ++i) {
-                if (words[index]->insecs[i].word->in_use) {
-                    if (max_past_fc < words[index]->insecs[i].word->put_index) {
-                        max_past_fc = words[index]->insecs[i].word->put_index;
-                    }
-                }
-            }
-            int jump_to = index - 1;
-            if (max_conf_set != -1) jump_to = max_conf_set;
-            if (max_conf_set < max_past_fc) jump_to = max_past_fc;
-            // conf_set union
-            for (int i = wordnode_count - 1 ; i >= 0 ; --i) {
+            // past-fc union, conf_set union
+            for (int i = jump_to ; i >= 0 ; --i) {
                 words[jump_to]->conf_set[i] |= words[index]->conf_set[i];
-            }
-            // past-fc union
-            for (int i = 0 ; i < words[index]->insecc ; ++i) {
-                if (words[index]->insecs[i].word->in_use) {
-                    words[jump_to]->conf_set[words[index]->insecs[i].word->put_index] = 1;
-                }
+                words[jump_to]->conf_set[i] |= words[index]->past_fc[i];
             }
             // remove h
             words[jump_to]->conf_set[jump_to] = 0;
@@ -222,6 +207,7 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                 for (int i = words[index]->insecc - 1 ; i >= 0 ; --i) {
                     Word* word_b = words[index]->insecs[i].word;
                     if (word_b->in_use == 0) {
+                        word_b->past_fc[index] = 0;
                         --map_stack_index;
                         word_b->map->sum = map_stack[map_stack_index].sum;
                         memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
@@ -248,15 +234,19 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                 memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(int));
                 ++map_stack_index;
                 join_map(word->map, &bitmaps[word->size - 1][insec.pos][(int)crosswords[index + 1][insec.x][insec.y]]);
+                word->past_fc[index] = 1;
                 /* If some map turns out to be 0 do early backtrack (pruning the domain) */
                 if (sum_bit(word->map) == 0) {
-                    for (int dw = 0 ; dw < word->insecc ; ++dw) {
-                        if (word->insecs[dw].word->in_use) {
-                            words[index]->conf_set[word->insecs[dw].word->put_index] = 1;
-                        }
+
+                    /* conf-set[i] <- union(conf-set[i], past-fc[j]) */ 
+                    for (int k = 0 ; k < index ; ++k) {
+                        words[index]->conf_set[k] |= word->past_fc[k];
                     }
+                    /* end of union */
+
                     for (int j = i ; j >= 0 ; --j) {
                         Word* word_b = words[index]->insecs[j].word;
+                        word_b->past_fc[index] = 0;
                         if (word_b->in_use == 0) {
                             --map_stack_index;
                             word_b->map->sum = map_stack[map_stack_index].sum;
