@@ -143,9 +143,10 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
 //TODO CHECK MAPS FOR SHIFT (MAYBE USE UNSIGNED)
 void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict, Word** words, int wordnode_count, Map*** bitmaps) {
     
+    int conf_size = (wordnode_count >> 5) + 1;
     for (int i = 0 ; i < wordnode_count ; ++i) {
-        words[i]->conf_set = calloc(wordnode_count, sizeof(int));
-        words[i]->past_fc = calloc(wordnode_count, sizeof(int));
+        words[i]->conf_set = calloc(conf_size, sizeof(int));
+        words[i]->past_fc = calloc(conf_size, sizeof(int));
     }
 
     int max_map_size = 0;
@@ -183,31 +184,38 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
             }
             // h <- max(max-list(conf-set[i], max-list(past-fc[i])))
             int jump_to = index - 1;
-            for (int i = index - 1 ; i >= 0 ; --i) {
-                if (words[index]->conf_set[i] || words[index]->past_fc[i]) {
-                    jump_to = i;
-                    break;
+            Word* curr_word = words[index];
+            for (int i = conf_size - 1 ; i >= 0 ; --i) {
+                int find = curr_word->past_fc[i] < curr_word->conf_set[i] ? curr_word->conf_set[i] : curr_word->past_fc[i];
+                if (find == 0) continue;
+                for (int j = 31 ; j >= 0 ; --j) {
+                    if ((find >> j) & 1) {
+                        jump_to = (i << 5) | j;
+                        break;
+                    }
                 }
             }
             // past-fc union, conf_set union
-            for (int i = jump_to ; i >= 0 ; --i) {
+            for (int i = 0 ; i < conf_size ; ++i) {
                 words[jump_to]->conf_set[i] |= words[index]->conf_set[i];
                 words[jump_to]->conf_set[i] |= words[index]->past_fc[i];
             }
             // remove h
-            words[jump_to]->conf_set[jump_to] = 0;
+            words[jump_to]->conf_set[jump_to >> 5] ^= 1 << (jump_to & 0x1F);
             //if (jump_to != index - 1) fprintf(stderr, "%d\n", jump_to - index + 1);
             do {
                 --map_stack_index;
                 words[index]->map->sum = map_stack[map_stack_index].sum;
                 memcpy(words[index]->map->array, map_stack[map_stack_index].array, words[index]->map->size * sizeof(int));
-                memset(words[index]->conf_set, 0, wordnode_count * sizeof(int));
+                memset(words[index]->conf_set, 0, conf_size * sizeof(int));
                 --index;
+                int conf_index = index >> 5;
+                int conf_bit = index & 0x1F;
                 /* Fixing back all maps that got ruined from the word put */
                 for (int i = words[index]->insecc - 1 ; i >= 0 ; --i) {
                     Word* word_b = words[index]->insecs[i].word;
                     if (word_b->in_use == 0) {
-                        word_b->past_fc[index] = 0;
+                        word_b->past_fc[conf_index] ^= 1 << conf_bit;
                         --map_stack_index;
                         word_b->map->sum = map_stack[map_stack_index].sum;
                         memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
@@ -225,6 +233,8 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
         words[index]->in_use = 1;
         words[index]->put_index = index;
         /* For every intersection in word update its map with the changed letter */
+        int conf_index = index >> 5;
+        int conf_bit = index & 0x1F;
         for (int i = 0 ; words[index]->insecs[i].word ; ++i) {
             Intersection insec = words[index]->insecs[i];
             Word* word = insec.word;
@@ -234,24 +244,23 @@ void solve_crossword(char*** crossword, int crossword_size, Dictionary* bigdict,
                 memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(int));
                 ++map_stack_index;
                 join_map(word->map, &bitmaps[word->size - 1][insec.pos][(int)crosswords[index + 1][insec.x][insec.y]]);
-                word->past_fc[index] = 1;
+                word->past_fc[conf_index] |= 1 << conf_bit;
                 /* If some map turns out to be 0 do early backtrack (pruning the domain) */
                 if (sum_bit(word->map) == 0) {
 
                     /* conf-set[i] <- union(conf-set[i], past-fc[j]) */ 
-                    for (int k = 0 ; k < index ; ++k) {
+                    for (int k = 0 ; k < conf_size ; ++k) {
                         words[index]->conf_set[k] |= word->past_fc[k];
                     }
                     /* end of union */
 
                     for (int j = i ; j >= 0 ; --j) {
                         Word* word_b = words[index]->insecs[j].word;
-                        word_b->past_fc[index] = 0;
                         if (word_b->in_use == 0) {
                             --map_stack_index;
                             word_b->map->sum = map_stack[map_stack_index].sum;
                             memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(int));
-                            word_b->conf_set[index] = 0;
+                            word_b->past_fc[conf_index] ^= 1 << conf_bit;
                         }
                     }
                     words[index]->in_use = 0;
