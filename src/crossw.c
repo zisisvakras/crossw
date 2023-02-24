@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include "extratypes.h"
 #include "extrafuns.h"
 
@@ -9,7 +10,14 @@ extern int errno;
 
 int main(int argc, char** argv) {
 
-    if (argc < 2) { /* Argument error handling */
+    /* Sanity check section */
+    if (sizeof(long long) * CHAR_BIT != 64) {
+        fprintf(stderr, "Buy new pc -_-\n");
+        return 1;
+    }
+
+    /* Argument error handling */
+    if (argc < 2) {
         fprintf(stderr, "Not enough arguments\n");
         return 1;
     }
@@ -20,7 +28,7 @@ int main(int argc, char** argv) {
     int check_mode = 0, draw_mode = 0;
 
     /* Loop reading arguments */
-    while (--argc) {
+    while (--argc) { //TODO better arguments, orestis
         if (argv[argc]) {
             /* Setting the flags as needed */
             if (!strcmp(argv[argc], "-dict")) {
@@ -44,33 +52,38 @@ int main(int argc, char** argv) {
     int max_word_size, crossword_size;
     init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
 
-    /* Allocating multipliers */
-    int** multi = malloc(max_word_size * sizeof(int*));
-    mallerr(multi, errno);
-    for (int i = 0 ; i < max_word_size ; ++i) {
-        multi[i] = calloc((i + 1), sizeof(int));
-        mallerr(multi[i], errno);
-    }
+    /* These markers will lessen the work/memory before solve */
+    int* lengths_on_grid = calloc(max_word_size, sizeof(int));
+    mallerr(lengths_on_grid, errno);
+
+    int* ascii_on_dict = calloc(256, sizeof(int));
+    mallerr(ascii_on_dict, errno);
 
     /* Map the crossword */
-    int grid_count = count_words_on_grid(crossword, crossword_size); /* Counts words on grid */
-    Word** grid_words = map_words_on_grid(crossword, crossword_size, grid_count, multi);
+    int grid_count = count_words_on_grid(crossword, crossword_size, lengths_on_grid); /* Counts words on grid */
+    Word** grid_words = map_words_on_grid(crossword, crossword_size, grid_count);
+
+    /* Just in case */
+    if (grid_count < 1) {
+        fprintf(stderr, "Nice crossword, no need of solving!\n");
+        return 1;
+    }
 
     /* Initialize dictionaries */
     int* dict_count = NULL; /* Counts words in each dictionary */
-    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count, multi);
+    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count, lengths_on_grid, ascii_on_dict);
 
     /* Initialize dict_maps */
-    Map*** dict_maps = init_dict_maps(bigdict, max_word_size, dict_count);
-    
+    Map*** dict_maps = init_dict_maps(bigdict, max_word_size, dict_count, lengths_on_grid, ascii_on_dict);
+
     /* Initializing maps for all words */
     for (int i = 0 ; i < grid_count ; ++i) {
         Map* src = dict_maps[grid_words[i]->size - 1][grid_words[i]->size];
         grid_words[i]->map = malloc(sizeof(Map));
         grid_words[i]->map->size = src->size;
-        grid_words[i]->map->array = malloc(src->size * sizeof(int));
+        grid_words[i]->map->array = malloc(src->size * sizeof(long long));
         /* Copying the map with 1s */
-        memcpy(grid_words[i]->map->array, src->array, src->size * sizeof(int));
+        memcpy(grid_words[i]->map->array, src->array, src->size * sizeof(long long));
         sum_bit(grid_words[i]->map);
     }
 
@@ -79,12 +92,12 @@ int main(int argc, char** argv) {
     mallerr(ord_words, errno);
     int ord_i = 0;
     for (int i = 0 ; i < grid_count ; ++i) {
-        if (!(grid_words[i]->orientation)) {
+        if (grid_words[i]->orientation == Horizontal) {
             ord_words[ord_i++] = grid_words[i];
         }
     }
     for (int i = 0 ; i < grid_count ; ++i) {
-        if (grid_words[i]->orientation) {
+        if (grid_words[i]->orientation == Vertical) {
             ord_words[ord_i++] = grid_words[i];
         }
     }
@@ -102,7 +115,14 @@ int main(int argc, char** argv) {
     }
 
     /* Cleanup */
+    free(ord_words);
     free_dictionary(bigdict, max_word_size, dict_count);
     free(dict_count);
+    free_maps(dict_maps, max_word_size);
+    free(lengths_on_grid);
+    free(ascii_on_dict);
+    free_words(grid_words, grid_count);
+    free(*crossword);
+    free(crossword);
     return 0;
 }

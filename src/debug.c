@@ -20,15 +20,15 @@ void print_words(Word** words, int wordnode_count, char** crossword) {
             words[i]->end,
             words[i]->size
         };
-        printf("(%p) %s: %d begin: %d end: %d size: %d\n", words + i, c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
+        printf("(%p) %s: %d begin: %d end: %d size: %d\n", (void*)(words + i), c[0] ? "col" : "row", c[1], c[2], c[3], c[4]);
         print_map(words[i]->map);
         /* Interesections */
         printf("insecs:\n");
-        int j = 0;
-        while(words[i]->insecs[j].word) {
-            printf("%p\n", words[i]->insecs[j].word);
-            ++j;
-        }
+        // @deprecated 
+        // while(words[i]->insecs[j].word) {
+        //     printf("%p\n", (void*)(words[i]->insecs[j].word));
+        //     ++j;
+        // }
         /* Actual value in crossword */
         printf("value: ");
         if (words[i]->orientation) {
@@ -62,13 +62,13 @@ void print_dictionary(Dictionary* bigdict, int max_word_size, int* words_count) 
  * @details debug tool
 */
 void print_map(Map* map) {
-    int* array = map->array;
+    long long* array = map->array;
     int size = map->size;
     int sum = map->sum;
     printf("size: %d, sum: %d\n", size, sum);
-    for (int i = 0 ; i < size ; i+=8) {
-        for (int j = 0 ; j < 8 ; ++j) {
-            if(i + j < size) printf("%08x ", array[i + j]);
+    for (int i = 0 ; i < size ; i+=4) {
+        for (int j = 0 ; j < 4 ; ++j) {
+            if(i + j < size) printf("%04llx ", array[i + j]);
         }
         putchar('\n');
     }

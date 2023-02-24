@@ -7,7 +7,8 @@
 
 extern int errno;
 
-Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict_count_ret, int** multi) {
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size,
+                            int** dict_count_ret, int* lengths_on_grid, int* ascii_on_dict) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
@@ -21,20 +22,28 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
     int* dict_count = calloc(max_word_size, sizeof(int));
     mallerr(dict_count, errno);
 
+    /* Intiializing worth */
+    int worth[256] = {0};
+
     /* Counting the words in dict file */
     while (fscanf(dictionary_file, "%80s", buffer) == 1) {
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue;
+        if (lengths_on_grid[word_size - 1] == 0) continue;
+        for (int i = 0 ; i < word_size ; ++i) {
+            ascii_on_dict[(int)buffer[i]] = 1;
+            ++worth[(int)buffer[i]];
+        }
         dict_count[word_size - 1]++;
     }
 
-    //TODO remove useless allocated dicts
     /* Allocate enough arrays for all word sizes that we may need */
-    Dictionary* bigdict = malloc(max_word_size * sizeof(Dictionary));
+    Dictionary* bigdict = calloc(max_word_size, sizeof(Dictionary));
     mallerr(bigdict, errno);
-    int** dictnode_values = malloc(max_word_size * sizeof(int*));
+    int** dictnode_values = calloc(max_word_size, sizeof(int*));
     mallerr(dictnode_values, errno);
     for (int i = 0 ; i < max_word_size ; ++i) {
+        if (lengths_on_grid[i] == 0) continue;
         bigdict[i] = malloc(dict_count[i] * sizeof(char*));
         mallerr(bigdict[i], errno);
         dictnode_values[i] = malloc(dict_count[i] * sizeof(int*));
@@ -52,17 +61,19 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
     while (fscanf(dictionary_file, "%80s", buffer) == 1) { /* Scan 1 word at a time */
         int word_size = strlen(buffer);
         if (word_size > max_word_size) continue; /* No need to allocate larger words than needed */
+        if (lengths_on_grid[word_size - 1] == 0) continue;
 
         int index = index_array[word_size - 1];
         bigdict[word_size - 1][index] = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
         mallerr(bigdict[word_size - 1][index], errno);
 
         strcpy(bigdict[word_size - 1][index], buffer); /* Copy word in buffer to dict */
-        dictnode_values[word_size - 1][index] = word_val(buffer, multi); /* Saving the words value */
+        dictnode_values[word_size - 1][index] = word_val(buffer, worth); /* Saving the words value */
 
         ++index_array[word_size - 1];
     }
     for (int i = 0 ; i < max_word_size ; ++i) {
+        if (lengths_on_grid[i] == 0) continue;
         sort_dictionary(bigdict[i], dictnode_values[i], 0, index_array[i] - 1);
     }
 
@@ -80,7 +91,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, int** dict
 }
 
 void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
-    for (int i = 0 ; i < max_word_size ; i++) {
+    for (int i = 0 ; i < max_word_size ; ++i) {
         for (int j = 0 ; j < dict_count[i] ; ++j) {
             free(bigdict[i][j]);
         }
@@ -89,39 +100,29 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
     free(bigdict);
 }
 
-//TODO optimize
-//TODO fix 32 and make it sizeof(int) * 8
+
+//TODO add offset to maps when u find a word so you can start from there
+//TODO maybe add them to premade bitmaps as well (that will be calculated in sum_bit)
 char* find_word(Dictionary dictionary, Word* word) {
-    int* array = word->map->array;
+    long long* array = word->map->array;
     int size = word->map->size;
     for (int i = 0 ; i < size ; ++i) {
         if (array[i] == 0) continue;
-        for (int j = 0 ; j < 32 ; ++j) {
+        for (int j = 0 ; j < 64 ; ++j) {
             if ((array[i] >> j) & 1) {
-                array[i] ^= 1 << j;
-                return dictionary[(i << 5) | j];
+                array[i] ^= 1LL << j;
+                --word->map->sum;
+                return dictionary[(i << 6) | j];
             }
         }
     }
     return NULL;
 }
 
-//TODO ask takis if letters other than 'a'-'z' are allowed
-//TODO making maps for all ascii characters
-int word_val(char* word, int** multi) {
-    int* smulti = multi[strlen(word) - 1]; // "s"pecific multi
+int word_val(char* word, int* worth) {
     int value = 0, i = -1;
-    int worth['z' + 1] = {
-        ['e'] = 26, ['a'] = 25, ['i'] = 24, ['r'] = 23,
-        ['t'] = 22, ['o'] = 21, ['n'] = 20, ['s'] = 19,
-        ['l'] = 18, ['c'] = 17, ['u'] = 16, ['m'] = 15,
-        ['d'] = 14, ['p'] = 13, ['h'] = 12, ['g'] = 11,
-        ['b'] = 10, ['y'] = 9,  ['f'] = 8,  ['w'] = 7,
-        ['k'] = 6,  ['v'] = 5,  ['x'] = 4,  ['z'] = 3,
-        ['j'] = 2,  ['q'] = 1
-    };
     while (word[++i]) {
-        value += worth[(int)word[i]] * smulti[i];
+        value += worth[(int)word[i]];
     }
     return value;
 }
@@ -135,8 +136,8 @@ void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int
         i = first;
         j = last;
         while (i < j) {
-            while (dictnode_values[i] >= dictnode_values[pivot] && i < last) i++;
-            while (dictnode_values[j] < dictnode_values[pivot]) j--;
+            while (dictnode_values[i] >= dictnode_values[pivot] && i < last) ++i;
+            while (dictnode_values[j] < dictnode_values[pivot]) --j;
             if (i < j) {
                 temp = dictionary[i];
                 dictionary[i] = dictionary[j];
