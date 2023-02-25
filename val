@@ -2,9 +2,9 @@
 
 make > /dev/null
 
-valgrind --dsymutil=yes --tool=callgrind ./target/crossw data/Crossword$1.txt -dict data/MoreWords.txt
-callgrind_annotate > profiler.out
-rm -rf callgrind.out.*
+valgrind ./target/crossw data/Crossword$1.txt -dict data/MoreWords.txt # | grep "refs:"
+# callgrind_annotate > profiler.out
+# rm -rf callgrind.out.*
 
-# 
+# --dsymutil=yes --tool=callgrind
 make clean > /dev/null

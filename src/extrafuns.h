@@ -14,14 +14,6 @@
         error("Error while allocating memory", (e));    \
 }
 
-/* Debugging tools */
-#ifdef DEBUG
-#include <assert.h>
-#define DBGCHECK(X) assert(X)
-#else
-#define DBGCHECK(X) 
-#endif
-
 /* crossu.c functions */
 void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_size_ret, int* max_word_size_ret);
 void draw_crossword(char** crossword, int crossword_size);
@@ -51,10 +43,5 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
 void free_maps(Map*** maps, int max_word_size);
 void join_map(Map* map1, Map* map2);
 int sum_bit(Map* map);
-
-/* debug.c funcs */
-void print_words(Word** words, int wordnode_count, char** crossword);
-void print_dictionary(Dictionary* bigdict, int max_word_size, int* words_count);
-void print_map(Map* map);
 
 #endif

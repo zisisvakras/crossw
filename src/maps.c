@@ -16,7 +16,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
     for (int i = 1 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
         map_sizes[i] = words_count[i] >> 6;
-        /* If words are not divisible by 64 we need 1 extra non-full array */
+        /* If words are not divisible by 64 we need 1 extra non-full bit array (extra long long) */
         if (words_count[i] & 0x3F) ++map_sizes[i];
     }
 
@@ -53,19 +53,19 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
     /* Creating the maps */
     for (int i = 1 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
-        Map** maps_i = maps[i];
+        register Map** maps_i = maps[i];
         for (int j = 0 ; j < words_count[i] ; ++j) { /* Looping through every word in dict */
-            char* word = bigdict[i][j];
+            register char* word = bigdict[i][j];
             int offset = j >> 6;
-            long long ap_bit = 1LL << (j & 0x3F);
+            register long long ap_bit = 1LL << (j & 0x3F); /* Bit to change in bitmap */
             for (int k = 0 ; k <= i ; ++k) { /* Every letter in word */
                 /**
-                 * Throw 1 to the appropriate bitmap.
-                 * j >> 5 calculates the 32 bit int that the 1 will put in.
-                 * j & 0x1F (j mod 31) calculates the position in the int.
-                 * We shift the bit to the position and we put it in with |.
-                 * i is the word_length.
-                 * k is the position in the word.
+                 *  Throw 1 to the appropriate bitmap.
+                 *  offset is the 64 bit long long that the 1 will be put in.
+                 *  ap_bit is the position in the long long.
+                 *  We shift the bit to the position and we put it in with |.
+                 *  i is the word_length.
+                 *  k is the position in the word.
                 */
                 maps_i[k][(int)word[k]].array[offset] |= ap_bit;
             }
@@ -80,9 +80,9 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
         mallerr(maps[word_size][word_size + 1][0].array, errno);
         /* Setting the whole array with 1s */
         memset(maps[word_size][word_size + 1][0].array, 0xFF, map_sizes[word_size] * sizeof(long long));
-        /* We need to remove the excess 1s in the case of extra int (to cover non divisible word_counts) */
+        /* We need to remove the excess 1s in the case of extra long long (to cover non divisible word_counts) */
         if (words_count[word_size] & 0x3F) {
-            long long remove = 0xFFFFFFFFFFFFFFFFLL;
+            long long remove = 0xFFFFFFFFFFFFFFFFLL; /* -1 but this looks cooler */
             remove <<= words_count[word_size] & 0x3F; /* Skip all that is fine */
             maps[word_size][word_size + 1][0].array[map_sizes[word_size] - 1] ^= remove; /* Remove rest bits */
         }
@@ -93,7 +93,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
 
 void free_maps(Map*** maps, int max_word_size) {
     for (int word_size = 1 ; word_size < max_word_size ; ++word_size) {
-        if (!maps[word_size]) continue;
+        if (!maps[word_size]) continue; /* Some maps might not be allocated */
         for (int position = 0 ; position <= word_size ; ++position) {
             for (int letter = 0 ; letter < 256 ; ++letter) {
                 free(maps[word_size][position][letter].array);
@@ -107,34 +107,35 @@ void free_maps(Map*** maps, int max_word_size) {
     free(maps);     
 }
 
+/* Bitwise and two bit arrays */
 void join_map(Map* map1, Map* map2) {
-    DBGCHECK(map1->size == map2->size); // debug tools
     register long long* array1 = map1->array;
     register long long* array2 = map2->array;
-    int size = map1->size;
-    for (register int i = 0 ; i < size ; ++i) {
-        array1[i] &= array2[i];
+    register int size = map1->size;
+    while (size--) {
+        *array1++ &= *array2++;
     }
 }
 
+/* Check if some & operation will result in empty domain */
 int fc_check(Map* map1, Map* map2) {
     register long long* array1 = map1->array;
     register long long* array2 = map2->array;
-    int size = map1->size;
-    for (register int i = 0 ; i < size ; ++i) {
-        if (array1[i] & array2[i]) return 0;
+    register int size = map1->size;
+    while (size--) {
+        if (*array1++ & *array2++) return 0;
     }
     return 1;
 }
 
-/* Brian Kernighan’s Algorithm */
+/* Calculating the number of 1s in bit array (domain size) */
 int sum_bit(Map* map) {
-    DBGCHECK(map != NULL); // debug tools
     register long long* array = map->array;
-    int size = map->size;
+    register int size = map->size;
     register int sum = 0;
-    for (register int i = 0 ; i < size ; ++i) {
-        register long long n = array[i];
+    /* Brian Kernighan’s Algorithm */
+    while (size--) {
+        register long long n = array[size];
         if (n == 0) continue;
         while (n) {
             n &= (n - 1);

@@ -7,6 +7,7 @@
 
 extern int errno;
 
+/* Writes word on crossword */
 void write_word(char** crossword, Word* node, char* word) {
     if (node->orientation == Vertical) { /* Vertical */
         for (int i = node->begin, j = 0 ; i <= node->end ; ++i, ++j) {
@@ -20,6 +21,7 @@ void write_word(char** crossword, Word* node, char* word) {
     }
 }
 
+/* Prints crossword in the solution format described in the assignment */
 void print_solution(char** crossword, Word** ord_words, int count) {
     for (int i = 0 ; i < count ; ++i) {
         int c = ord_words[i]->constant;
@@ -115,10 +117,11 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
     mallerr(buf_insecs, errno);
     int buf_insecc = 0;
     for (int i = 0 ; i < count ; ++i) {
-        /* Reseting buf_insecs */
+        /* Reseting buf_insecc */
         buf_insecc = 0;
         for (int j = grid_words[i]->begin ; j <= grid_words[i]->end ; ++j) {
             for (int k = 0 ; k < count ; ++k) {
+                /* For every letter in the word check if some other word has the same */
                 if (grid_words[k]->orientation == grid_words[i]->orientation) continue;
                 int cord = grid_words[i]->constant;
                 if (grid_words[k]->constant == j && grid_words[k]->begin <= cord && cord <= grid_words[k]->end) {
@@ -134,6 +137,7 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
             }
         }
         grid_words[i]->insecs = malloc(buf_insecc * sizeof(Intersection));
+        mallerr(grid_words[i]->insecs, errno);
         grid_words[i]->insecc = buf_insecc;
         memcpy(grid_words[i]->insecs, buf_insecs, buf_insecc * sizeof(Intersection));
     }
@@ -146,9 +150,9 @@ void prop_word(Word** words, int wordnode_count, int last) {
     int min = words[index]->map->sum;
     int insecc = words[index]->insecc;
     /**
-     * Looping through all words to find the one with lowest possibilities
-     * as a 2nd criteria we are also looking for the number of intersections
-     * note for the 2nd one: this might not be needed we are not sure ¯\_(ツ)_/¯
+     *  Looping through all words to find the one with lowest possibilities
+     *  as a 2nd criteria we are also looking for the number of intersections
+     *  note for the 2nd one: this might not be needed we are not sure ¯\_(ツ)_/¯
      */
     for (int i = index + 1 ; i < wordnode_count ; ++i) {
         int temp = words[i]->map->sum;

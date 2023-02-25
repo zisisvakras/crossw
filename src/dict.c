@@ -8,22 +8,24 @@
 extern int errno;
 
 Dictionary* init_dictionary(char* dictionary_path, int max_word_size, char** all_of_dict_ret,
-                            int** dict_count_ret, int* lengths_on_grid, int* ascii_on_dict) {
+                            int** dict_count_ret, register int* lengths_on_grid, register int* ascii_on_dict) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
         error("Error while handling dictionary", errno);
 
-    /* New method */
+    /* Creating a big memory block that has the whole dictionary file */
     fseek(dictionary_file, 0, SEEK_END);
     int file_size = ftell(dictionary_file);
     fseek(dictionary_file, 0, SEEK_SET);
-    char* all_of_dict = malloc((file_size + 1) * sizeof(char));
-    fread(all_of_dict, sizeof(char), file_size, dictionary_file);
-    all_of_dict[file_size] = 0;
+    register char* all_of_dict = malloc((file_size + 1) * sizeof(char));
+    mallerr(all_of_dict, errno);
+    if (fread(all_of_dict, sizeof(char), file_size, dictionary_file) != (size_t)file_size)
+        error("Error while reading the dictionary", errno);
+    all_of_dict[file_size] = '\0';
     
     /* Finding how many words (per length) dict has */
-    int* dict_count = calloc(max_word_size, sizeof(int));
+    register int* dict_count = calloc(max_word_size, sizeof(int));
     mallerr(dict_count, errno);
 
     /* Intiializing worth */
@@ -31,12 +33,13 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, char** all
 
     /* Counting the words in dict file */
     int word_size = 0;
-    for (int i = 0 ; i < file_size ; ++i) {
+    for (register int i = 0 ; i < file_size ; ++i) {
         if (all_of_dict[i] == '\n') {
             if (word_size <= max_word_size && lengths_on_grid[word_size - 1]) {
                 ++dict_count[word_size - 1];
             }
             else {
+                /* If word was not needed remove it from worth */
                 for (int j = i - word_size ; j < i ; ++j) {
                     --worth[(int)all_of_dict[j]];
                 }
@@ -68,21 +71,22 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, char** all
     
     /* Scanning words to put into dictionary */
     char* token = strtok(all_of_dict, "\n");
-    while (token) { /* Scan 1 word at a time */
+    while (token) { /* While strtok finds tokens */
         int word_size = strlen(token);
-        // fprintf(stderr, "%s\n", token);
         if (word_size > max_word_size || lengths_on_grid[word_size - 1] == 0) {
             token = strtok(NULL, "\n");
             continue;
         }
 
         int index = index_array[word_size - 1];
-        bigdict[word_size - 1][index] = token; /* Copy word in buffer to dict */
-        dictnode_values[word_size - 1][index] = word_val(token, worth); /* Saving the words value */
+        bigdict[word_size - 1][index] = token; /* Saving the token */
+        dictnode_values[word_size - 1][index] = word_val(token, worth);
 
         ++index_array[word_size - 1];
         token = strtok(NULL, "\n");
     }
+
+    /* Sorting the necessary dicts */
     for (int i = 0 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
         sort_dictionary(bigdict[i], dictnode_values[i], 0, index_array[i] - 1);
@@ -91,6 +95,7 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, char** all
     /* Returning the values */
     *dict_count_ret = dict_count;
     *all_of_dict_ret = all_of_dict;
+
     /* Cleanup */
     for (int i = 0 ; i < max_word_size ; ++i) {
         free(dictnode_values[i]);
@@ -109,16 +114,14 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, char* all_of_dict) 
     free(bigdict);
 }
 
-
-//TODO add offset to maps when u find a word so you can start from there
-//TODO maybe add them to premade bitmaps as well (that will be calculated in sum_bit)
 char* find_word(Dictionary dictionary, Word* word) {
-    long long* array = word->map->array;
+    register long long* array = word->map->array;
     int size = word->map->size;
-    for (int i = 0 ; i < size ; ++i) {
+    for (register int i = 0 ; i < size ; ++i) {
         if (array[i] == 0) continue;
-        for (int j = 0 ; j < 64 ; ++j) {
+        for (register int j = 0 ; j < 64 ; ++j) {
             if ((array[i] >> j) & 1) {
+                /* Turning off the bit so we don't use it in the future */
                 array[i] ^= 1LL << j;
                 --word->map->sum;
                 return dictionary[(i << 6) | j];
@@ -128,18 +131,19 @@ char* find_word(Dictionary dictionary, Word* word) {
     return NULL;
 }
 
-int word_val(char* word, int* worth) {
-    int value = 0, i = -1;
+int word_val(register char* word, register int* worth) {
+    register int value = 0, i = -1;
     while (word[++i]) {
         value += worth[(int)word[i]];
     }
     return value;
 }
 
-void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int last) {
-    int i, j, pivot;
-    char* temp;
-    int temp_v;
+/* Quick sort implementation that sorts the dict words based on the word's worth */
+void sort_dictionary(Dictionary dictionary, register int* dictnode_values, int first, int last) {
+    register int i, j, pivot;
+    register char* temp;
+    register int temp_v;
     if (first < last) {
         pivot = first;
         i = first;

@@ -8,8 +8,8 @@
 extern int errno;
 
 /**
- * This function reads the crossword file and produces the grid based on the data.
- * It also returns the maximum word size on the grid and the size of the grid.
+ *  This function reads the crossword file and produces the grid based on the data.
+ *  It also returns the maximum word size on the grid and the size of the grid.
  */
 void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_size_ret, int* max_word_size_ret) {
     char** crossword = NULL;
@@ -22,15 +22,16 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
 
     if (fscanf(crossword_file, "%d", &crossword_size) != 1) /* Check failed size scan */
         error("Error while reading size of crossword", errno);
+
     if (crossword_size <= 0) {
         fprintf(stderr, "Invalid grid size of %d cannot proceed\n", crossword_size);
         exit(1);
     }
     
-    /* Allocating memory for the grid */
+    /* Allocating memory block for the grid */
     crossword = malloc(crossword_size * sizeof(char*));
     mallerr(crossword, errno);
-    /* Setting every character with \0 to begin */
+    /* Setting every character with '\0' to begin */
     crossword[0] = calloc(crossword_size * crossword_size, sizeof(char));
     mallerr(crossword[0], errno);
     /* Fixing the pointers in the right spot */
@@ -41,8 +42,12 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
     /* Reading the black tiles */
     int x, y;
     while (fscanf(crossword_file, "%d %d", &x, &y) == 2) {
-        /* Using bell to mark black tiles since # can be in words */
-        crossword[x - 1][y - 1] = '\r'; /* Offset by 1 since data on file is based 1 */
+        if (x <= 0 || x > crossword_size || y <= 0 || y > crossword_size) {
+            fprintf(stderr, "Invalid location of black tile cannot proceed\n");
+            exit(1);
+        }
+        /* Using '\r' to mark black tiles since '#' can be in words */
+        crossword[x - 1][y - 1] = '\r'; /* Offset by 1 since data on file is based 1 (why not zero tho? -_-) */
     }
 
     /* Biggest word finder */
@@ -88,6 +93,7 @@ void draw_crossword(char** crossword, int crossword_size) {
     }
 }
 
+/* -check flag implementation */
 void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_count) {
     char* buffer = malloc(sizeof(char) * 81);
     mallerr(buffer, errno);
@@ -104,12 +110,14 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
             exit(1);
         }
         Map* map = malloc(sizeof(Map));
+        mallerr(map, errno);
         map->size = maps[word_size - 1][word_size]->size;
         map->array = malloc(map->size * sizeof(long long));
-        /* Copying array with 1s */
+        mallerr(map->array, errno);
+        /* Copying array with 1s (full domain) */
         memcpy(map->array, maps[word_size - 1][word_size]->array, map->size * sizeof(long long));
         /* Creating the appropriate map for the word given */
-        for (int i = 0 ; buffer[i] ; ++i) {
+        for (int i = 0 ; i < word_size ; ++i) {
             join_map(map, maps[word_size - 1][i] + buffer[i]);
         }
         /* If map has 0 bits that means word is not in dict */
@@ -140,17 +148,18 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
     free(buffer);
 }
 
-//TODO CHECK MAPS FOR SHIFT (MAYBE USE UNSIGNED)
 void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wordnode_count, Map*** bitmaps) {
     
     /* Allocating sets for CBJ */
     for (int i = 0 ; i < wordnode_count ; ++i) {
         words[i]->conf_set = calloc(wordnode_count, sizeof(int));
+        mallerr(words[i]->conf_set, errno);
         words[i]->past_fc = calloc(wordnode_count, sizeof(int));
+        mallerr(words[i]->past_fc, errno);
     }
 
     /* Initializing map_stack (for backtrack) */
-    int max_map_size = 0;
+    int max_map_size = 0; /* Map stack will be at most the sum of insecc in words */
     int map_stack_size = wordnode_count;
     for (int i = 0 ; i < wordnode_count ; ++i) {
         map_stack_size += words[i]->insecc;
@@ -158,14 +167,17 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             max_map_size = words[i]->map->size;
         }
     }
-
     Map* map_stack = calloc(map_stack_size, sizeof(Map));
+    mallerr(map_stack, errno);
     for (int i = 0 ; i < map_stack_size ; ++i) {
         map_stack[i].array = malloc(max_map_size * sizeof(long long));
+        mallerr(map_stack[i].array, errno);
     }
     int map_stack_index = 0;
-    int index = 0, prune_flag = 0;
-    prop_word(words, wordnode_count, index);
+
+    int index = 0; /* Words index */
+    int prune_flag = 0; /* Flag for forward checking */
+    prop_word(words, wordnode_count, index); /* Initial DVO */
     while (index < wordnode_count) {
         prune_flag = 0;
         /* Find word in bigdict */
@@ -191,7 +203,7 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             }
             /* remove h */
             words[jump_to]->conf_set[jump_to] = 0;
-            /* backtrack */
+            /* backtrack to jump_to */
             do {
                 --map_stack_index;
                 words[index]->map->sum = map_stack[map_stack_index].sum;
@@ -212,6 +224,7 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             } while (index > jump_to);
             continue;
         }
+        /* Forward checking */
         for (int i = 0 ; i < words[index]->insecc ; ++i) {
             Intersection insec = words[index]->insecs[i];
             Word* word = insec.word;
@@ -227,10 +240,12 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             }
         }
         if (prune_flag == 0) {
+            /* For every intersection in word update its map with the changed letter */
             for (int i = 0 ; i < words[index]->insecc ; ++i) {
                 Intersection insec = words[index]->insecs[i];
                 Word* word = insec.word;
                 if (word->in_use == 0) {
+                    /* Saving maps in case of backtracking */
                     map_stack[map_stack_index].sum = word->map->sum;
                     memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(long long));
                     ++map_stack_index;
@@ -243,14 +258,14 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             /* Label word used */
             words[index - 1]->in_use = 1;
             words[index - 1]->word_put = word_found;
-            /* For every intersection in word update its map with the changed letter */
             if (index == wordnode_count) break;
-            prop_word(words, wordnode_count, index);
+            prop_word(words, wordnode_count, index); /* DVO */
             map_stack[map_stack_index].sum = words[index]->map->sum;
             memcpy(map_stack[map_stack_index].array, words[index]->map->array, words[index]->map->size * sizeof(long long));
             ++map_stack_index;
         }
     }
+    /* Updating crossword after a solution is found */
     for (int i = 0 ; i < wordnode_count ; ++i) {
         write_word(crossword, words[i], words[i]->word_put);
     }
@@ -259,5 +274,4 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
         free(map_stack[i].array);
     }
     free(map_stack);
-    
 }

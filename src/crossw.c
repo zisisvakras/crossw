@@ -28,22 +28,24 @@ int main(int argc, char** argv) {
     int check_mode = 0, draw_mode = 0;
 
     /* Loop reading arguments */
-    while (--argc) { //TODO better arguments, orestis
-        if (argv[argc]) {
-            /* Setting the flags as needed */
-            if (!strcmp(argv[argc], "-dict")) {
-                if(argv[argc + 1] == NULL) { /* Argument error handling */
-                    fprintf(stderr, "Could not find dictionary\n");
-                    return 1;
-                }
-                dictionary_path = argv[argc + 1];
+    for (int i = 2 ; i < argc ; ++i) { /* Skip 1 because its the crossword_path */
+        /* Setting the flags as needed */
+        if (!strcmp(argv[i], "-dict")) {
+            if(argv[++i] == NULL) { /* Argument error handling */
+                fprintf(stderr, "Could not find dictionary\n");
+                return 1;
             }
-            if (!strcmp(argv[argc], "-check")) {
-                check_mode = 1;
-            }
-            if (!strcmp(argv[argc], "-draw")) {
-                draw_mode = 1;
-            }
+            dictionary_path = argv[i];
+        }
+        else if (!strcmp(argv[i], "-check")) {
+            check_mode = 1;
+        }
+        else if (!strcmp(argv[i], "-draw")) {
+            draw_mode = 1;
+        }
+        else {
+            fprintf(stderr, "Invalid argument \"%s\"\n", argv[i]);
+            return 1;
         }
     }
 
@@ -52,15 +54,14 @@ int main(int argc, char** argv) {
     int max_word_size, crossword_size;
     init_crossword(crossword_path, &crossword, &crossword_size, &max_word_size);
 
-    /* These markers will lessen the work/memory before solve */
+    /* These markers will lessen the work and memory before solve */
     int* lengths_on_grid = calloc(max_word_size, sizeof(int));
     mallerr(lengths_on_grid, errno);
-
     int* ascii_on_dict = calloc(256, sizeof(int));
     mallerr(ascii_on_dict, errno);
 
     /* Map the crossword */
-    int grid_count = count_words_on_grid(crossword, crossword_size, lengths_on_grid); /* Counts words on grid */
+    int grid_count = count_words_on_grid(crossword, crossword_size, lengths_on_grid);
     Word** grid_words = map_words_on_grid(crossword, crossword_size, grid_count);
 
     /* Just in case */
@@ -71,7 +72,7 @@ int main(int argc, char** argv) {
 
     /* Initialize dictionaries */
     int* dict_count = NULL; /* Counts words in each dictionary */
-    char* all_of_dict = NULL;
+    char* all_of_dict = NULL; /* Points to the memory block that has all of dict */
     Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &all_of_dict, &dict_count, lengths_on_grid, ascii_on_dict);
 
     /* Initialize dict_maps */
@@ -81,9 +82,11 @@ int main(int argc, char** argv) {
     for (int i = 0 ; i < grid_count ; ++i) {
         Map* src = dict_maps[grid_words[i]->size - 1][grid_words[i]->size];
         grid_words[i]->map = malloc(sizeof(Map));
+        mallerr(grid_words[i]->map, errno);
         grid_words[i]->map->size = src->size;
         grid_words[i]->map->array = malloc(src->size * sizeof(long long));
-        /* Copying the map with 1s */
+        mallerr(grid_words[i]->map->array, errno);
+        /* Copying the map with 1s (full domain) */
         memcpy(grid_words[i]->map->array, src->array, src->size * sizeof(long long));
         sum_bit(grid_words[i]->map);
     }
@@ -91,7 +94,7 @@ int main(int argc, char** argv) {
     /* Making an array of words thats in the proper order for check and print */
     Word** ord_words = malloc(grid_count * sizeof(Word*));
     mallerr(ord_words, errno);
-    int ord_i = 0;
+    int ord_i = 0; /* index */
     for (int i = 0 ; i < grid_count ; ++i) {
         if (grid_words[i]->orientation == Horizontal) {
             ord_words[ord_i++] = grid_words[i];
@@ -107,7 +110,6 @@ int main(int argc, char** argv) {
     if (check_mode) {
         check_crossword(crossword, ord_words, dict_maps, grid_count);
         if (draw_mode) draw_crossword(crossword, crossword_size);
-        printf("dict: %s cross: %s max: %d words: %d\n", dictionary_path, crossword_path, max_word_size, grid_count); //FIXME remove
     }
     else {
         solve_crossword(crossword, bigdict, grid_words, grid_count, dict_maps);
