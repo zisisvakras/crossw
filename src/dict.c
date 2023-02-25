@@ -7,16 +7,20 @@
 
 extern int errno;
 
-Dictionary* init_dictionary(char* dictionary_path, int max_word_size,
+Dictionary* init_dictionary(char* dictionary_path, int max_word_size, char** all_of_dict_ret,
                             int** dict_count_ret, int* lengths_on_grid, int* ascii_on_dict) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
         error("Error while handling dictionary", errno);
 
-    /* Allocating a buffer */
-    char* buffer = malloc(81 * sizeof(char));
-    mallerr(buffer, errno);
+    /* New method */
+    fseek(dictionary_file, 0, SEEK_END);
+    int file_size = ftell(dictionary_file);
+    fseek(dictionary_file, 0, SEEK_SET);
+    char* all_of_dict = malloc((file_size + 1) * sizeof(char));
+    fread(all_of_dict, sizeof(char), file_size, dictionary_file);
+    all_of_dict[file_size] = 0;
     
     /* Finding how many words (per length) dict has */
     int* dict_count = calloc(max_word_size, sizeof(int));
@@ -26,15 +30,23 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size,
     int worth[256] = {0};
 
     /* Counting the words in dict file */
-    while (fscanf(dictionary_file, "%80s", buffer) == 1) {
-        int word_size = strlen(buffer);
-        if (word_size > max_word_size) continue;
-        if (lengths_on_grid[word_size - 1] == 0) continue;
-        for (int i = 0 ; i < word_size ; ++i) {
-            ascii_on_dict[(int)buffer[i]] = 1;
-            ++worth[(int)buffer[i]];
+    int word_size = 0;
+    for (int i = 0 ; i < file_size ; ++i) {
+        if (all_of_dict[i] == '\n') {
+            if (word_size <= max_word_size && lengths_on_grid[word_size - 1]) {
+                ++dict_count[word_size - 1];
+            }
+            else {
+                for (int j = i - word_size ; j < i ; ++j) {
+                    --worth[(int)all_of_dict[j]];
+                }
+            }
+            word_size = 0;
+            continue;
         }
-        dict_count[word_size - 1]++;
+        ascii_on_dict[(int)all_of_dict[i]] = 1;
+        ++worth[(int)all_of_dict[i]];
+        ++word_size;
     }
 
     /* Allocate enough arrays for all word sizes that we may need */
@@ -53,24 +65,23 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size,
     /* Keeping track of all array indexes */
     int* index_array = calloc(max_word_size, sizeof(int));
     mallerr(index_array, errno);
-
-    /* Go back to the top of dictionary stream */
-    rewind(dictionary_file);
-
+    
     /* Scanning words to put into dictionary */
-    while (fscanf(dictionary_file, "%80s", buffer) == 1) { /* Scan 1 word at a time */
-        int word_size = strlen(buffer);
-        if (word_size > max_word_size) continue; /* No need to allocate larger words than needed */
-        if (lengths_on_grid[word_size - 1] == 0) continue;
+    char* token = strtok(all_of_dict, "\n");
+    while (token) { /* Scan 1 word at a time */
+        int word_size = strlen(token);
+        // fprintf(stderr, "%s\n", token);
+        if (word_size > max_word_size || lengths_on_grid[word_size - 1] == 0) {
+            token = strtok(NULL, "\n");
+            continue;
+        }
 
         int index = index_array[word_size - 1];
-        bigdict[word_size - 1][index] = malloc((word_size + 1) * sizeof(char)); /* Allocate memory for word */
-        mallerr(bigdict[word_size - 1][index], errno);
-
-        strcpy(bigdict[word_size - 1][index], buffer); /* Copy word in buffer to dict */
-        dictnode_values[word_size - 1][index] = word_val(buffer, worth); /* Saving the words value */
+        bigdict[word_size - 1][index] = token; /* Copy word in buffer to dict */
+        dictnode_values[word_size - 1][index] = word_val(token, worth); /* Saving the words value */
 
         ++index_array[word_size - 1];
+        token = strtok(NULL, "\n");
     }
     for (int i = 0 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
@@ -79,22 +90,20 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size,
 
     /* Returning the values */
     *dict_count_ret = dict_count;
+    *all_of_dict_ret = all_of_dict;
     /* Cleanup */
     for (int i = 0 ; i < max_word_size ; ++i) {
         free(dictnode_values[i]);
     }
     free(dictnode_values);
     free(index_array);
-    free(buffer);
     fclose(dictionary_file);
     return bigdict;
 }
 
-void free_dictionary(Dictionary* bigdict, int max_word_size, int* dict_count) {
+void free_dictionary(Dictionary* bigdict, int max_word_size, char* all_of_dict) {
+    free(all_of_dict);
     for (int i = 0 ; i < max_word_size ; ++i) {
-        for (int j = 0 ; j < dict_count[i] ; ++j) {
-            free(bigdict[i][j]);
-        }
         free(bigdict[i]);
     }
     free(bigdict);
@@ -157,3 +166,4 @@ void sort_dictionary(Dictionary dictionary, int* dictnode_values, int first, int
         sort_dictionary(dictionary, dictnode_values, j + 1 , last);
     }
 }
+

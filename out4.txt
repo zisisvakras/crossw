@@ -1,0 +1,14 @@
+ c  y  s  t ### e  a  t ### p  l  o  t 
+ y  e  a  r ### a  l  e ### h  e  i  r 
+ s  a  r  a ### g  a  s ### a  n  n  e 
+ t  r  a  n  s  l  i  t  e  r  a  t  e 
+######### s  e  e ### y  a  m #########
+ c  a  r  l  a ######### r  a  t  e  r 
+ a  l  a  i ############### c  a  r  e 
+ t  e  e  t  h ######### m  o  t  e  t 
+######### e  e  l ### r  a  p #########
+ p  h  a  r  m  a  c  o  p  o  e  i  a 
+ l  e  n  a ### g  a  s ### e  d  e  n 
+ o  i  n  t ### o  r  e ### i  e  e  e 
+ t  r  e  e ### s  e  n ### a  n  e  w 
+dict: data/Words.txt cross: data/Crossword4.txt max: 13 words: 60

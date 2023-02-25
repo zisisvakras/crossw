@@ -1,0 +1,21 @@
+### r ### s ### f ### l ### g  o  s  p  e  l ### b  m  w ###
+ l  e  t  t  e  r  m  e  n ### s ### a ### a  d  r  o  i  t 
+### a ### e ### a ### a ### l  i  b  r  a  r  i  a  n ### h 
+ s  c  r  i  b  n  e  r  s ### e ### a  b  s  e  n  t  e  e 
+### t ### n ### c  a  n  t  e  r  e  l  l  e ### d  e  e  r 
+ e  a  t  e  r ### t ### a ######### l  e  n  n  y ### r  e 
+### n ### r ### s  o  i  r  e  e ### a ############### i ###
+ e  t  a ### r  e  n  e ### a ### e  x  e  r  c  i  s  e ###
+ m ### t  r  e  e ### e  a  t  e  r ### r ### o  t  t ### d 
+ i ### h ### t ### h  e  r ###### a  g  i  t  a  t  e ### i 
+ s  h  a  p  i  r  o ### a  n  a ### r  e  s  t ### a  t  e 
+ s ### b ### n ### r  o  b  e  r  t  a ### a ### a  r  e  s 
+ a  b  a  b  a ### s ### y  a  c  h  t ### r  e  g  a  l  e 
+ r ### s ### l  o  e  b ### p  a  e  a  n ###### e  t ### l 
+ y  m  c  a ###### d  e  c  o  d  e ### a ### i  e  e  e ###
+### a  a  a ### s  o  m  a  l  i ### e  d  e  n ###### r ###
+ r  e  n  a  l ### m  a  r  i  a ### l  i  l  l  i  a  n ###
+ e ######### e ######### u  t ### e  e  r  i  e ### l  e  t 
+ n  u  c  l  e  a  r ### s  a  r  a  n ###### t  e  a  s  e 
+ e ### a ### r ### e  x  o  n  e  r  a  t  e ### m  i  t  e 
+dict: data/Words.txt cross: data/Crossword5.txt max: 10 words: 105

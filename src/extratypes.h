@@ -23,6 +23,7 @@ struct Word {
     Map* map;
     int* conf_set;
     int* past_fc;
+    char* word_put;
 };
 
 //TODO make the map array long long

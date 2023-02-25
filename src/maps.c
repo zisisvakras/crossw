@@ -53,9 +53,12 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
     /* Creating the maps */
     for (int i = 1 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
+        Map** maps_i = maps[i];
         for (int j = 0 ; j < words_count[i] ; ++j) { /* Looping through every word in dict */
             char* word = bigdict[i][j];
-            for (int k = 0 ; word[k] ; ++k) { /* Every letter in word */
+            int offset = j >> 6;
+            long long ap_bit = 1LL << (j & 0x3F);
+            for (int k = 0 ; k <= i ; ++k) { /* Every letter in word */
                 /**
                  * Throw 1 to the appropriate bitmap.
                  * j >> 5 calculates the 32 bit int that the 1 will put in.
@@ -64,7 +67,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
                  * i is the word_length.
                  * k is the position in the word.
                 */
-                maps[i][k][(int)word[k]].array[j >> 6] |= 1LL << (j & 0x3F);
+                maps_i[k][(int)word[k]].array[offset] |= ap_bit;
             }
         }
     }
@@ -112,6 +115,16 @@ void join_map(Map* map1, Map* map2) {
     for (register int i = 0 ; i < size ; ++i) {
         array1[i] &= array2[i];
     }
+}
+
+int fc_check(Map* map1, Map* map2) {
+    register long long* array1 = map1->array;
+    register long long* array2 = map2->array;
+    int size = map1->size;
+    for (register int i = 0 ; i < size ; ++i) {
+        if (array1[i] & array2[i]) return 0;
+    }
+    return 1;
 }
 
 /* Brian Kernighan’s Algorithm */

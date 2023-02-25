@@ -1,0 +1,6 @@
+###### a  a  a 
+### n  o  r  a 
+ b  e  r  e  a 
+ i  o  t  a ###
+ d  n  a ######
+dict: data/Words.txt cross: data/Crossword1.txt max: 5 words: 10

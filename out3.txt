@@ -1,0 +1,14 @@
+ a  r  e  a ### e  r  e ### a  l  m  a 
+ r  y  a  n ### l  a  x ### z  i  o  n 
+ e  a  r  n ### l  e  e ### a  l  a  n 
+ a  n  n  a  l  e ### r  e  l  a  t  e 
+######### l  e  n ### t  e  e #########
+ l  e  a  s  e ######### l  a  t  e  r 
+ e  l  l ##################### e  r  e 
+ o  m  e  g  a ######### s  l  e  e  t 
+######### r  a  m ### l  e  e #########
+ b  a  t  e  a  u ### l  e  s  s  e  e 
+ e  r  i  e ### l  e  o ### s  h  a  d 
+ t  e  e  n ### c  r  y ### e  a  s  e 
+ h  a  r  e ### t  e  d ### e  d  e  n 
+dict: data/Words.txt cross: data/Crossword3.txt max: 6 words: 64

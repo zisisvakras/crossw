@@ -71,7 +71,8 @@ int main(int argc, char** argv) {
 
     /* Initialize dictionaries */
     int* dict_count = NULL; /* Counts words in each dictionary */
-    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &dict_count, lengths_on_grid, ascii_on_dict);
+    char* all_of_dict = NULL;
+    Dictionary* bigdict = init_dictionary(dictionary_path, max_word_size, &all_of_dict, &dict_count, lengths_on_grid, ascii_on_dict);
 
     /* Initialize dict_maps */
     Map*** dict_maps = init_dict_maps(bigdict, max_word_size, dict_count, lengths_on_grid, ascii_on_dict);
@@ -109,14 +110,14 @@ int main(int argc, char** argv) {
         printf("dict: %s cross: %s max: %d words: %d\n", dictionary_path, crossword_path, max_word_size, grid_count); //FIXME remove
     }
     else {
-        solve_crossword(&crossword, crossword_size, bigdict, grid_words, grid_count, dict_maps);
+        solve_crossword(crossword, bigdict, grid_words, grid_count, dict_maps);
         if (draw_mode) draw_crossword(crossword, crossword_size);
         else print_solution(crossword, ord_words, grid_count);
     }
 
     /* Cleanup */
     free(ord_words);
-    free_dictionary(bigdict, max_word_size, dict_count);
+    free_dictionary(bigdict, max_word_size, all_of_dict);
     free(dict_count);
     free_maps(dict_maps, max_word_size);
     free(lengths_on_grid);

@@ -1,0 +1,10 @@
+######### a  a  a #########
+###### g  r  a  n  t ######
+### e  l  e  a  n  o  r ###
+ a  r  e  a ### e  r  o  s 
+ i  r  a ######### t  o  o 
+ r  o  s  e ### l  u  m  p 
+### r  o  x  b  u  r  y ###
+###### n  i  e  c  e ######
+######### t  t  y #########
+dict: data/Words.txt cross: data/Crossword2.txt max: 7 words: 24
