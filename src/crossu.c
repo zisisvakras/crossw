@@ -234,6 +234,8 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
                     for (int k = 0 ; k < index ; ++k) {
                         words[index]->conf_set[k] |= word->past_fc[k];
                     }
+                    /* Remove all words that will cause the same conflict */
+                    remove_map(words[index]->map, &bitmaps[words[index]->size - 1][insec.pos_l][(int)word_found[insec.pos_l]]);
                     prune_flag = 1;
                     break;
                 }

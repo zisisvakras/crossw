@@ -117,6 +117,18 @@ void join_map(Map* map1, Map* map2) {
     }
 }
 
+/* Bitwise and two bit arrays */
+void remove_map(Map* map1, Map* map2) {
+    register long long* array1 = map1->array;
+    register long long* array2 = map2->array;
+    register int size = map1->size;
+    while (size--) {
+        *array1 = (*array1 | *array2) ^ *array2;
+        ++array1;
+        ++array2;
+    }
+}
+
 /* Check if some & operation will result in empty domain */
 int fc_check(Map* map1, Map* map2) {
     register long long* array1 = map1->array;
