@@ -86,7 +86,8 @@ void draw_crossword(char** crossword, int crossword_size) {
             if (crossword[i][j] == '\r') {
                 printf("###");
             } else {
-                printf(" %c ", crossword[i][j]);
+                /* In case of cut off cell */
+                printf(" %c ", crossword[i][j] == '\0' ? ' ' : crossword[i][j]);
             }
         }
         putchar('\n');

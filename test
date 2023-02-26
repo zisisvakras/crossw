@@ -33,4 +33,14 @@ do
     echo ""
 done
 
+echo "Dict: EmptyDict.txt"
+echo ""
+
+for i in {1..5}
+do
+    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$i.txt -dict data/tests/BigDict.txt  | \
+    ./target/crossw data/Crossword$i.txt -dict data/tests/BigDict.txt -check -draw
+    echo ""
+done
+
 make clean > /dev/null
