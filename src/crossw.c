@@ -11,7 +11,7 @@ extern int errno;
 int main(int argc, char** argv) {
 
     /* Sanity check section */
-    if (sizeof(long long) * CHAR_BIT != 64) {
+    if (sizeof(unsigned long long) * CHAR_BIT != 64) {
         fprintf(stderr, "Buy new pc -_-\n");
         return 1;
     }
@@ -84,10 +84,10 @@ int main(int argc, char** argv) {
         grid_words[i]->map = malloc(sizeof(Map));
         mallerr(grid_words[i]->map, errno);
         grid_words[i]->map->size = src->size;
-        grid_words[i]->map->array = malloc(src->size * sizeof(long long));
+        grid_words[i]->map->array = malloc(src->size * sizeof(unsigned long long));
         mallerr(grid_words[i]->map->array, errno);
         /* Copying the map with 1s (full domain) */
-        memcpy(grid_words[i]->map->array, src->array, src->size * sizeof(long long));
+        memcpy(grid_words[i]->map->array, src->array, src->size * sizeof(unsigned long long));
         sum_bit(grid_words[i]->map);
     }
 

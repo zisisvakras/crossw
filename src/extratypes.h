@@ -27,7 +27,7 @@ struct Word {
 };
 
 struct Map {
-    long long* array; /* Bit array that maps the dict */
+    unsigned long long* array; /* Bit array that maps the dict */
     int size; /* Size of the array */
     int sum; /* Number of 1 bits */
 };

@@ -45,7 +45,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
             for (int letter = 0 ; letter < 256 ; ++letter) {
                 if (ascii_on_dict[letter] == 0) continue;
                 maps[word_size][position][letter].size = map_sizes[word_size];
-                maps[word_size][position][letter].array = calloc(map_sizes[word_size], sizeof(long long));
+                maps[word_size][position][letter].array = calloc(map_sizes[word_size], sizeof(unsigned long long));
                 mallerr(maps[word_size][position][letter].array, errno);
             }
         }
@@ -57,7 +57,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
         for (int j = 0 ; j < words_count[i] ; ++j) { /* Looping through every word in dict */
             register char* word = bigdict[i][j];
             int offset = j >> 6;
-            register long long ap_bit = 1LL << (j & 0x3F); /* Bit to change in bitmap */
+            register unsigned long long ap_bit = 1LL << (j & 0x3F); /* Bit to change in bitmap */
             for (int k = 0 ; k <= i ; ++k) { /* Every letter in word */
                 /**
                  *  Throw 1 to the appropriate bitmap.
@@ -76,13 +76,13 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
     for (int word_size = 1 ; word_size < max_word_size ; ++word_size) {
         if (lengths_on_grid[word_size] == 0) continue;
         maps[word_size][word_size + 1][0].size = map_sizes[word_size];
-        maps[word_size][word_size + 1][0].array = malloc(map_sizes[word_size] * sizeof(long long));
+        maps[word_size][word_size + 1][0].array = malloc(map_sizes[word_size] * sizeof(unsigned long long));
         mallerr(maps[word_size][word_size + 1][0].array, errno);
         /* Setting the whole array with 1s */
-        memset(maps[word_size][word_size + 1][0].array, 0xFF, map_sizes[word_size] * sizeof(long long));
+        memset(maps[word_size][word_size + 1][0].array, 0xFF, map_sizes[word_size] * sizeof(unsigned long long));
         /* We need to remove the excess 1s in the case of extra long long (to cover non divisible word_counts) */
         if (words_count[word_size] & 0x3F) {
-            long long remove = 0xFFFFFFFFFFFFFFFFLL; /* -1 but this looks cooler */
+            unsigned long long remove = 0xFFFFFFFFFFFFFFFFULL; /* -1 but this looks cooler */
             remove <<= words_count[word_size] & 0x3F; /* Skip all that is fine */
             maps[word_size][word_size + 1][0].array[map_sizes[word_size] - 1] ^= remove; /* Remove rest bits */
         }
@@ -109,8 +109,8 @@ void free_maps(Map*** maps, int max_word_size) {
 
 /* Bitwise and two bit arrays */
 void join_map(Map* map1, Map* map2) {
-    register long long* array1 = map1->array;
-    register long long* array2 = map2->array;
+    register unsigned long long* array1 = map1->array;
+    register unsigned long long* array2 = map2->array;
     register int size = map1->size;
     while (size--) {
         *array1++ &= *array2++;
@@ -119,20 +119,18 @@ void join_map(Map* map1, Map* map2) {
 
 /* Bitwise and two bit arrays */
 void remove_map(Map* map1, Map* map2) {
-    register long long* array1 = map1->array;
-    register long long* array2 = map2->array;
+    register unsigned long long* array1 = map1->array;
+    register unsigned long long* array2 = map2->array;
     register int size = map1->size;
     while (size--) {
-        *array1 = (*array1 | *array2) ^ *array2;
-        ++array1;
-        ++array2;
+        *array1++ &= ~*array2++;
     }
 }
 
 /* Check if some & operation will result in empty domain */
 int fc_check(Map* map1, Map* map2) {
-    register long long* array1 = map1->array;
-    register long long* array2 = map2->array;
+    register unsigned long long* array1 = map1->array;
+    register unsigned long long* array2 = map2->array;
     register int size = map1->size;
     while (size--) {
         if (*array1++ & *array2++) return 0;
@@ -142,12 +140,12 @@ int fc_check(Map* map1, Map* map2) {
 
 /* Calculating the number of 1s in bit array (domain size) */
 int sum_bit(Map* map) {
-    register long long* array = map->array;
+    register unsigned long long* array = map->array;
     register int size = map->size;
     register int sum = 0;
     /* Brian Kernighan’s Algorithm */
     while (size--) {
-        register long long n = array[size];
+        register unsigned long long n = array[size];
         if (n == 0) continue;
         while (n) {
             n &= (n - 1);

@@ -115,7 +115,7 @@ void free_dictionary(Dictionary* bigdict, int max_word_size, char* all_of_dict) 
 }
 
 char* find_word(Dictionary dictionary, Word* word) {
-    register long long* array = word->map->array;
+    register unsigned long long* array = word->map->array;
     int size = word->map->size;
     for (register int i = 0 ; i < size ; ++i) {
         if (array[i] == 0) continue;

@@ -112,10 +112,10 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
         Map* map = malloc(sizeof(Map));
         mallerr(map, errno);
         map->size = maps[word_size - 1][word_size]->size;
-        map->array = malloc(map->size * sizeof(long long));
+        map->array = malloc(map->size * sizeof(unsigned long long));
         mallerr(map->array, errno);
         /* Copying array with 1s (full domain) */
-        memcpy(map->array, maps[word_size - 1][word_size]->array, map->size * sizeof(long long));
+        memcpy(map->array, maps[word_size - 1][word_size]->array, map->size * sizeof(unsigned long long));
         /* Creating the appropriate map for the word given */
         for (int i = 0 ; i < word_size ; ++i) {
             join_map(map, maps[word_size - 1][i] + buffer[i]);
@@ -170,7 +170,7 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
     Map* map_stack = calloc(map_stack_size, sizeof(Map));
     mallerr(map_stack, errno);
     for (int i = 0 ; i < map_stack_size ; ++i) {
-        map_stack[i].array = malloc(max_map_size * sizeof(long long));
+        map_stack[i].array = malloc(max_map_size * sizeof(unsigned long long));
         mallerr(map_stack[i].array, errno);
     }
     int map_stack_index = 0;
@@ -207,7 +207,7 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             do {
                 --map_stack_index;
                 words[index]->map->sum = map_stack[map_stack_index].sum;
-                memcpy(words[index]->map->array, map_stack[map_stack_index].array, words[index]->map->size * sizeof(long long));
+                memcpy(words[index]->map->array, map_stack[map_stack_index].array, words[index]->map->size * sizeof(unsigned long long));
                 memset(words[index]->conf_set, 0, wordnode_count * sizeof(int));
                 --index;
                 /* Fixing back all maps that got ruined from the word put */
@@ -217,7 +217,7 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
                         word_b->past_fc[index] = 0;
                         --map_stack_index;
                         word_b->map->sum = map_stack[map_stack_index].sum;
-                        memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(long long));
+                        memcpy(word_b->map->array, map_stack[map_stack_index].array, word_b->map->size * sizeof(unsigned long long));
                     }
                 }
                 words[index]->in_use = 0;
@@ -249,7 +249,7 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
                 if (word->in_use == 0) {
                     /* Saving maps in case of backtracking */
                     map_stack[map_stack_index].sum = word->map->sum;
-                    memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(long long));
+                    memcpy(map_stack[map_stack_index].array, word->map->array, word->map->size * sizeof(unsigned long long));
                     ++map_stack_index;
                     join_map(word->map, &bitmaps[word->size - 1][insec.pos][(int)word_found[insec.pos_l]]);
                     int past_sum = word->map->sum;
@@ -263,7 +263,7 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             if (index == wordnode_count) break;
             prop_word(words, wordnode_count, index); /* DVO */
             map_stack[map_stack_index].sum = words[index]->map->sum;
-            memcpy(map_stack[map_stack_index].array, words[index]->map->array, words[index]->map->size * sizeof(long long));
+            memcpy(map_stack[map_stack_index].array, words[index]->map->array, words[index]->map->size * sizeof(unsigned long long));
             ++map_stack_index;
         }
     }

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+make > /dev/null
+ 
+
+echo "Dict: Words.txt"
+echo ""
+
+for i in {1..5}
+do
+    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$i.txt -dict data/Words.txt  | \
+    ./target/crossw data/Crossword$i.txt -dict data/Words.txt -check -draw
+    echo ""
+done
+
+echo "Dict: MoreWords.txt"
+echo ""
+
+for i in {1..5}
+do
+    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$i.txt -dict data/MoreWords.txt  | \
+    ./target/crossw data/Crossword$i.txt -dict data/MoreWords.txt -check -draw
+    echo ""
+done
+
+echo "Dict: EvenMoreWords.txt"
+echo ""
+
+for i in {1..5}
+do
+    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$i.txt -dict data/EvenMoreWords.txt  | \
+    ./target/crossw data/Crossword$i.txt -dict data/EvenMoreWords.txt -check -draw
+    echo ""
+done
+
+make clean > /dev/null
