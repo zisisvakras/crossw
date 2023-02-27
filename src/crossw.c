@@ -11,7 +11,7 @@ extern int errno;
 int main(int argc, char** argv) {
 
     /* Sanity check section */
-    if (sizeof(unsigned long long) * CHAR_BIT != 64) {
+    if (sizeof(unsigned long long) * CHAR_BIT < 64) {
         fprintf(stderr, "Buy new pc -_-\n");
         return 1;
     }

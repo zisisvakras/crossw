@@ -117,7 +117,7 @@ void join_map(Map* map1, Map* map2) {
     }
 }
 
-/* Bitwise and two bit arrays */
+/* Removes all bits of map2 from map1 */
 void remove_map(Map* map1, Map* map2) {
     register unsigned long long* array1 = map1->array;
     register unsigned long long* array2 = map2->array;
