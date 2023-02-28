@@ -122,7 +122,7 @@ char* find_word(Dictionary dictionary, Word* word) {
         for (register int j = 0 ; j < 64 ; ++j) {
             if ((array[i] >> j) & 1) {
                 /* Turning off the bit so we don't use it in the future */
-                array[i] ^= 1LL << j;
+                array[i] ^= 1ULL << j;
                 --word->map->sum;
                 return dictionary[(i << 6) | j];
             }
