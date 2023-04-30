@@ -12,7 +12,7 @@
 make > /dev/null
 
 if [ "x$1" = "x7" ]; then
-    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Empty7.txt -dict data/$2Words.txt  | \
+    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Empty7.txt -dict data/$2Words.txt | \
     ./target/crossw data/Empty7.txt -dict data/$2Words.txt -check -draw
 elif [ "x$1" = "xval" ]; then
     valgrind ./target/crossw data/Crossword$2.txt -dict data/$3Words.txt
@@ -34,7 +34,7 @@ elif [ "x$1" = "xtest" ]; then
         for j in "${dicts[@]}"
         do
             echo "cross: Crossword$i.txt dict: $j.txt"
-            /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$i.txt -dict data/$j.txt  | \
+            /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$i.txt -dict data/$j.txt | \
             ./target/crossw data/Crossword$i.txt -dict data/$j.txt -check -draw
             echo ""
         done
@@ -42,12 +42,12 @@ elif [ "x$1" = "xtest" ]; then
     for j in "${dicts[@]}"
     do
         echo "cross: hard.txt dict: $j.txt"
-        /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/hard.txt -dict data/$j.txt  | \
+        /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/hard.txt -dict data/$j.txt | \
         ./target/crossw data/hard.txt -dict data/$j.txt -check -draw
         echo ""
     done
 else
-    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/$2Words.txt  | \
+    /usr/bin/time -f "%E %Uu %Ss %P" ./target/crossw data/Crossword$1.txt -dict data/$2Words.txt | \
     ./target/crossw data/Crossword$1.txt -dict data/$2Words.txt -check -draw
 fi
 

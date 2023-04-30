@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 #include "extratypes.h"
 #include "extrafuns.h"
-
-extern int errno;
 
 /**
  *  This function reads the crossword file and produces the grid based on the data.
@@ -18,10 +17,10 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
 
     FILE* crossword_file = fopen(crossword_path, "r");
     if (crossword_file == NULL) /* File error handling */
-        error("Error while handling crossword", errno);
+        error("Error while handling crossword");
 
     if (fscanf(crossword_file, "%d", &crossword_size) != 1) /* Check failed size scan */
-        error("Error while reading size of crossword", errno);
+        error("Error while reading size of crossword");
 
     if (crossword_size <= 0) {
         fprintf(stderr, "Invalid grid size of %d cannot proceed\n", crossword_size);
@@ -30,10 +29,10 @@ void init_crossword(char* crossword_path, char*** crossword_ret, int* crossword_
     
     /* Allocating memory block for the grid */
     crossword = malloc(crossword_size * sizeof(char*));
-    mallerr(crossword, errno);
+    mallerr(crossword);
     /* Setting every character with '\0' to begin */
     crossword[0] = calloc(crossword_size * crossword_size, sizeof(char));
-    mallerr(crossword[0], errno);
+    mallerr(crossword[0]);
     /* Fixing the pointers in the right spot */
     for (int i = 0 ; i < crossword_size - 1 ; ++i) {
         crossword[i + 1] = crossword[i] + crossword_size;
@@ -97,7 +96,7 @@ void draw_crossword(char** crossword, int crossword_size) {
 /* -check flag implementation */
 void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_count) {
     char* buffer = malloc(sizeof(char) * 81);
-    mallerr(buffer, errno);
+    mallerr(buffer);
 
     int index = 0;
     while (fscanf(stdin, "%80s", buffer) == 1) {
@@ -111,10 +110,10 @@ void check_crossword(char** crossword, Word** words, Map*** maps, int wordnode_c
             exit(1);
         }
         Map* map = malloc(sizeof(Map));
-        mallerr(map, errno);
+        mallerr(map);
         map->size = maps[word_size - 1][word_size]->size;
         map->array = malloc(map->size * sizeof(unsigned long long));
-        mallerr(map->array, errno);
+        mallerr(map->array);
         /* Copying array with 1s (full domain) */
         memcpy(map->array, maps[word_size - 1][word_size]->array, map->size * sizeof(unsigned long long));
         /* Creating the appropriate map for the word given */
@@ -154,9 +153,9 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
     /* Allocating sets for CBJ */
     for (int i = 0 ; i < wordnode_count ; ++i) {
         words[i]->conf_set = calloc(wordnode_count, sizeof(int));
-        mallerr(words[i]->conf_set, errno);
+        mallerr(words[i]->conf_set);
         words[i]->past_fc = calloc(wordnode_count, sizeof(int));
-        mallerr(words[i]->past_fc, errno);
+        mallerr(words[i]->past_fc);
     }
 
     /* Initializing map_stack (for backtrack) */
@@ -169,10 +168,10 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
         }
     }
     Map* map_stack = calloc(map_stack_size, sizeof(Map));
-    mallerr(map_stack, errno);
+    mallerr(map_stack);
     for (int i = 0 ; i < map_stack_size ; ++i) {
         map_stack[i].array = malloc(max_map_size * sizeof(unsigned long long));
-        mallerr(map_stack[i].array, errno);
+        mallerr(map_stack[i].array);
     }
     int map_stack_index = 0;
 
@@ -226,23 +225,35 @@ void solve_crossword(char** crossword, Dictionary* bigdict, Word** words, int wo
             continue;
         }
         /* Forward checking */
+        int emc_index = index - 1;
+        int* emc_past_fc = NULL;
         for (int i = 0 ; i < words[index]->insecc ; ++i) {
             Intersection insec = words[index]->insecs[i];
             Word* word = insec.word;
             if (word->in_use == 0) {
                 if (fc_check(word->map, &bitmaps[word->size - 1][insec.pos][(int)word_found[insec.pos_l]])) {
-                    /* conf-set[i] <- union(conf-set[i], past-fc[j]) */ 
-                    for (int k = 0 ; k < index ; ++k) {
-                        words[index]->conf_set[k] |= word->past_fc[k];
+                    /* conf-set[i] <- union(conf-set[i], past-fc[j]) */
+                    if (!emc_past_fc) {
+                        emc_past_fc = word->past_fc;
+                        prune_flag = 1;
+                    }
+                    int k = index;
+                    while (--k >= 0 && word->past_fc[k] == 0);
+                    if (k >= 0 && emc_index > k) {
+                        emc_index = k;
+                        emc_past_fc = word->past_fc;
                     }
                     /* Remove all words that will cause the same conflict */
                     remove_map(words[index]->map, &bitmaps[words[index]->size - 1][insec.pos_l][(int)word_found[insec.pos_l]]);
-                    prune_flag = 1;
-                    break;
                 }
             }
         }
-        if (prune_flag == 0) {
+        if (prune_flag) {
+            for (int i = emc_index ; i >= 0 ; --i) {
+                words[index]->conf_set[i] |= emc_past_fc[i];
+            }
+        }
+        else {
             /* For every intersection in word update its map with the changed letter */
             for (int i = 0 ; i < words[index]->insecc ; ++i) {
                 Intersection insec = words[index]->insecs[i];
