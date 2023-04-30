@@ -6,8 +6,6 @@
 #include "extratypes.h"
 #include "extrafuns.h"
 
-extern int errno;
-
 int main(int argc, char** argv) {
 
     /* Sanity check section */
@@ -56,9 +54,9 @@ int main(int argc, char** argv) {
 
     /* These markers will lessen the work and memory before solve */
     int* lengths_on_grid = calloc(max_word_size, sizeof(int));
-    mallerr(lengths_on_grid, errno);
+    mallerr(lengths_on_grid);
     int* ascii_on_dict = calloc(256, sizeof(int));
-    mallerr(ascii_on_dict, errno);
+    mallerr(ascii_on_dict);
 
     /* Map the crossword */
     int grid_count = count_words_on_grid(crossword, crossword_size, lengths_on_grid);
@@ -82,10 +80,10 @@ int main(int argc, char** argv) {
     for (int i = 0 ; i < grid_count ; ++i) {
         Map* src = dict_maps[grid_words[i]->size - 1][grid_words[i]->size];
         grid_words[i]->map = malloc(sizeof(Map));
-        mallerr(grid_words[i]->map, errno);
+        mallerr(grid_words[i]->map);
         grid_words[i]->map->size = src->size;
         grid_words[i]->map->array = malloc(src->size * sizeof(unsigned long long));
-        mallerr(grid_words[i]->map->array, errno);
+        mallerr(grid_words[i]->map->array);
         /* Copying the map with 1s (full domain) */
         memcpy(grid_words[i]->map->array, src->array, src->size * sizeof(unsigned long long));
         sum_bit(grid_words[i]->map);
@@ -93,7 +91,7 @@ int main(int argc, char** argv) {
 
     /* Making an array of words thats in the proper order for check and print */
     Word** ord_words = malloc(grid_count * sizeof(Word*));
-    mallerr(ord_words, errno);
+    mallerr(ord_words);
     int ord_i = 0; /* index */
     for (int i = 0 ; i < grid_count ; ++i) {
         if (grid_words[i]->orientation == Horizontal) {

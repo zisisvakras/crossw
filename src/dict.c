@@ -5,28 +5,26 @@
 #include "extratypes.h"
 #include "extrafuns.h"
 
-extern int errno;
-
 Dictionary* init_dictionary(char* dictionary_path, int max_word_size, char** all_of_dict_ret,
                             int** dict_count_ret, register int* lengths_on_grid, register int* ascii_on_dict) {
 
     FILE* dictionary_file = fopen(dictionary_path, "r");
     if (dictionary_file == NULL) /* File error handling */
-        error("Error while handling dictionary", errno);
+        error("Error while handling dictionary");
 
     /* Creating a big memory block that has the whole dictionary file */
     fseek(dictionary_file, 0, SEEK_END);
     int file_size = ftell(dictionary_file);
     fseek(dictionary_file, 0, SEEK_SET);
     register char* all_of_dict = malloc((file_size + 1) * sizeof(char));
-    mallerr(all_of_dict, errno);
+    mallerr(all_of_dict);
     if (fread(all_of_dict, sizeof(char), file_size, dictionary_file) != (size_t)file_size)
-        error("Error while reading the dictionary", errno);
+        error("Error while reading the dictionary");
     all_of_dict[file_size] = '\0';
     
     /* Finding how many words (per length) dict has */
     register int* dict_count = calloc(max_word_size, sizeof(int));
-    mallerr(dict_count, errno);
+    mallerr(dict_count);
 
     /* Intiializing worth */
     int worth[256] = {0};
@@ -54,20 +52,20 @@ Dictionary* init_dictionary(char* dictionary_path, int max_word_size, char** all
 
     /* Allocate enough arrays for all word sizes that we may need */
     Dictionary* bigdict = calloc(max_word_size, sizeof(Dictionary));
-    mallerr(bigdict, errno);
+    mallerr(bigdict);
     int** dictnode_values = calloc(max_word_size, sizeof(int*));
-    mallerr(dictnode_values, errno);
+    mallerr(dictnode_values);
     for (int i = 0 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
         bigdict[i] = malloc(dict_count[i] * sizeof(char*));
-        mallerr(bigdict[i], errno);
+        mallerr(bigdict[i]);
         dictnode_values[i] = malloc(dict_count[i] * sizeof(int*));
-        mallerr(dictnode_values[i], errno);
+        mallerr(dictnode_values[i]);
     }
 
     /* Keeping track of all array indexes */
     int* index_array = calloc(max_word_size, sizeof(int));
-    mallerr(index_array, errno);
+    mallerr(index_array);
     
     /* Scanning words to put into dictionary */
     char* token = strtok(all_of_dict, "\n");

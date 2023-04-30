@@ -5,8 +5,6 @@
 #include "extratypes.h"
 #include "extrafuns.h"
 
-extern int errno;
-
 /* Writes word on crossword */
 void write_word(char** crossword, Word* node, char* word) {
     if (node->orientation == Vertical) { /* Vertical */
@@ -64,10 +62,10 @@ int count_words_on_grid(char** crossword, int crossword_size, int* lengths_on_gr
 Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
     /* Initializing grid_words */
     Word** grid_words = malloc(count * sizeof(Word*));
-    mallerr(grid_words, errno);
+    mallerr(grid_words);
     for (int i = 0 ; i < count ; ++i) {
         grid_words[i] = calloc(1, sizeof(Word)); /* Setting most default values to 0 */
-        mallerr(grid_words[i], errno);
+        mallerr(grid_words[i]);
     }
 
     /* Mapping the grid */
@@ -114,7 +112,7 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
 
     /* Finding the intersections */
     Intersection* buf_insecs = malloc(count * sizeof(Intersection));
-    mallerr(buf_insecs, errno);
+    mallerr(buf_insecs);
     int buf_insecc = 0;
     for (int i = 0 ; i < count ; ++i) {
         /* Reseting buf_insecc */
@@ -137,7 +135,7 @@ Word** map_words_on_grid(char** crossword, int crossword_size, int count) {
             }
         }
         grid_words[i]->insecs = malloc(buf_insecc * sizeof(Intersection));
-        mallerr(grid_words[i]->insecs, errno);
+        mallerr(grid_words[i]->insecs);
         grid_words[i]->insecc = buf_insecc;
         memcpy(grid_words[i]->insecs, buf_insecs, buf_insecc * sizeof(Intersection));
     }

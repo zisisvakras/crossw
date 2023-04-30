@@ -5,14 +5,12 @@
 #include "extratypes.h"
 #include "extrafuns.h"
 
-extern int errno;
-
 Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
                       int* lengths_on_grid, int* ascii_on_dict) {
 
     /* Calculating map_sizes */
     int* map_sizes = malloc(max_word_size * sizeof(int));
-    mallerr(map_sizes, errno);
+    mallerr(map_sizes);
     for (int i = 1 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
         map_sizes[i] = words_count[i] >> 6;
@@ -22,18 +20,18 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
 
     /* Allocating memory for maps */
     Map*** maps = calloc(max_word_size, sizeof(Map**));
-    mallerr(maps, errno);
+    mallerr(maps);
     for (int i = 1 ; i < max_word_size ; ++i) {
         if (lengths_on_grid[i] == 0) continue;
         maps[i] = calloc((i + 2), sizeof(Map*)); /* +2 because i is word_size - 1 */
-        mallerr(maps[i], errno);
+        mallerr(maps[i]);
         for (int j = 0 ; j <= i ; ++j) {
             maps[i][j] = calloc(256, sizeof(Map)); /* all of ascii table */
-            mallerr(maps[i][j], errno);
+            mallerr(maps[i][j]);
         }
         /* Adding an extra map that will be full of 1s */
         maps[i][i + 1] = calloc(1, sizeof(Map));
-        mallerr(maps[i][i + 1], errno);
+        mallerr(maps[i][i + 1]);
     }
 
     /* Allocating the arrays */
@@ -46,7 +44,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
                 if (ascii_on_dict[letter] == 0) continue;
                 maps[word_size][position][letter].size = map_sizes[word_size];
                 maps[word_size][position][letter].array = calloc(map_sizes[word_size], sizeof(unsigned long long));
-                mallerr(maps[word_size][position][letter].array, errno);
+                mallerr(maps[word_size][position][letter].array);
             }
         }
     }
@@ -77,7 +75,7 @@ Map*** init_dict_maps(Dictionary* bigdict, int max_word_size, int* words_count,
         if (lengths_on_grid[word_size] == 0) continue;
         maps[word_size][word_size + 1][0].size = map_sizes[word_size];
         maps[word_size][word_size + 1][0].array = malloc(map_sizes[word_size] * sizeof(unsigned long long));
-        mallerr(maps[word_size][word_size + 1][0].array, errno);
+        mallerr(maps[word_size][word_size + 1][0].array);
         /* Setting the whole array with 1s */
         memset(maps[word_size][word_size + 1][0].array, 0xFF, map_sizes[word_size] * sizeof(unsigned long long));
         /* We need to remove the excess 1s in the case of extra long long (to cover non divisible word_counts) */
